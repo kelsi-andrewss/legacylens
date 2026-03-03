@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Vercel deployment config
+  serverExternalPackages: ["@pinecone-database/pinecone"],
 };
 
 export default nextConfig;
