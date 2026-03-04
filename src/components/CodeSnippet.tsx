@@ -30,9 +30,11 @@ interface CodeSnippetProps {
   chunk: ChunkData;
   onPin?: (chunk: ChunkData) => void;
   isPinned?: boolean;
+  activeRoutine?: string | null;
+  onRoutineHover?: (name: string | null) => void;
 }
 
-export default function CodeSnippet({ chunk, onPin, isPinned }: CodeSnippetProps) {
+export default function CodeSnippet({ chunk, onPin, isPinned, activeRoutine, onRoutineHover }: CodeSnippetProps) {
   const { metadata: m, score } = chunk;
   const [showPinConfirm, setShowPinConfirm] = useState(false);
 
@@ -45,12 +47,29 @@ export default function CodeSnippet({ chunk, onPin, isPinned }: CodeSnippetProps
   }, [chunk, onPin, isPinned]);
   const relevance = (score * 100).toFixed(1);
   const githubUrl = `https://github.com/Reference-LAPACK/lapack/blob/master/${m.file_path}#L${m.line_start}`;
+  const isTracerActive = activeRoutine === m.subroutine_name;
+
+  const handleBadgeEnter = useCallback(() => {
+    onRoutineHover?.(m.subroutine_name);
+  }, [onRoutineHover, m.subroutine_name]);
+
+  const handleBadgeLeave = useCallback(() => {
+    onRoutineHover?.(null);
+  }, [onRoutineHover]);
 
   return (
-    <div className="rounded-lg border border-ll-outline bg-ll-surface-variant shadow-sm overflow-hidden">
+    <div
+      className="semantic-tracer-card rounded-lg border border-ll-outline bg-ll-surface-variant shadow-sm overflow-hidden"
+      data-tracer-active={isTracerActive || undefined}
+    >
       <div className="flex items-center justify-between border-b border-ll-outline bg-ll-surface-tonal px-4 py-2">
         <div className="flex items-center gap-2">
-          <span className="font-mono text-sm font-semibold text-ll-on-surface">
+          <span
+            className="font-mono text-sm font-semibold text-ll-on-surface semantic-tracer-badge"
+            onMouseEnter={handleBadgeEnter}
+            onMouseLeave={handleBadgeLeave}
+            style={{ cursor: onRoutineHover ? "pointer" : undefined }}
+          >
             {m.kind} {m.subroutine_name}
           </span>
           <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
