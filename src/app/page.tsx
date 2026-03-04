@@ -278,19 +278,20 @@ export default function Home() {
             )}
 
             {chunks.length > 0 && (
-              <div className="space-y-4">
+              <div className="space-y-4 reveal-enter">
                 <h2 className="text-lg font-semibold text-ll-on-surface">
                   Retrieved Code ({chunks.length} chunks)
                 </h2>
-                {chunks.map((chunk) => (
-                  <CodeSnippet
-                    key={chunk.id}
-                    chunk={chunk}
-                    onPin={handlePin}
-                    isPinned={pinnedIds.has(chunk.id)}
-                    activeRoutine={activeRoutine}
-                    onRoutineHover={handleRoutineHover}
-                  />
+                {chunks.map((chunk, index) => (
+                  <div key={chunk.id} className="reveal-enter" style={{ animationDelay: `${index * 80}ms` }}>
+                    <CodeSnippet
+                      chunk={chunk}
+                      onPin={handlePin}
+                      isPinned={pinnedIds.has(chunk.id)}
+                      activeRoutine={activeRoutine}
+                      onRoutineHover={handleRoutineHover}
+                    />
+                  </div>
                 ))}
               </div>
             )}
