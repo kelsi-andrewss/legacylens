@@ -98,14 +98,14 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
+    <div className="min-h-screen bg-ll-surface">
       <main className="mx-auto max-w-6xl px-4 py-8">
         <div className="flex gap-8">
           {/* Sidebar filters */}
           <aside className="hidden w-48 shrink-0 lg:block">
             <div className="sticky top-8 space-y-6">
               <div>
-                <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-ll-on-surface-muted">
                   Category
                 </h3>
                 <div className="space-y-1">
@@ -115,8 +115,8 @@ export default function Home() {
                       onClick={() => setCategoryFilter(cat)}
                       className={`block w-full rounded px-3 py-1.5 text-left text-sm transition-colors ${
                         categoryFilter === cat
-                          ? "bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300"
-                          : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
+                          ? "bg-ll-primary-container text-ll-on-primary-container"
+                          : "text-ll-on-surface-muted hover:bg-ll-surface-tonal"
                       }`}
                     >
                       {cat || "All"}
@@ -125,7 +125,7 @@ export default function Home() {
                 </div>
               </div>
               <div>
-                <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-ll-on-surface-muted">
                   Data Type
                 </h3>
                 <div className="space-y-1">
@@ -135,8 +135,8 @@ export default function Home() {
                       onClick={() => setTypeFilter(t)}
                       className={`block w-full rounded px-3 py-1.5 text-left text-sm transition-colors ${
                         typeFilter === t
-                          ? "bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300"
-                          : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
+                          ? "bg-ll-primary-container text-ll-on-primary-container"
+                          : "text-ll-on-surface-muted hover:bg-ll-surface-tonal"
                       }`}
                     >
                       {t || "All"}
@@ -166,7 +166,7 @@ export default function Home() {
 
             {chunks.length > 0 && (
               <div className="space-y-4">
-                <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+                <h2 className="text-lg font-semibold text-ll-on-surface">
                   Retrieved Code ({chunks.length} chunks)
                 </h2>
                 {chunks.map((chunk) => (
@@ -177,7 +177,7 @@ export default function Home() {
 
             {!answer && !isLoading && chunks.length === 0 && (
               <div className="space-y-3">
-                <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                <p className="text-sm text-ll-on-surface-muted">
                   Try an example:
                 </p>
                 <div className="grid gap-3 sm:grid-cols-3">
@@ -189,12 +189,12 @@ export default function Home() {
                     <button
                       key={query}
                       onClick={() => runExample(query)}
-                      className="rounded-lg border border-zinc-200 bg-white px-4 py-3 text-left transition-colors hover:border-blue-300 hover:bg-blue-50 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:border-blue-600 dark:hover:bg-blue-900/30"
+                      className="rounded-lg border border-ll-outline bg-ll-surface-variant px-4 py-3 text-left transition-colors hover:border-ll-primary hover:bg-ll-primary-container"
                     >
-                      <span className="block text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                      <span className="block text-sm font-medium text-ll-on-surface">
                         &quot;{query}&quot;
                       </span>
-                      <span className="mt-1 block text-xs text-zinc-500 dark:text-zinc-400">
+                      <span className="mt-1 block text-xs text-ll-on-surface-muted">
                         {desc}
                       </span>
                     </button>

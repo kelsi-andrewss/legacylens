@@ -21,8 +21,8 @@ export default function ModeSelector({ mode, onModeChange }: ModeSelectorProps) 
           onClick={() => onModeChange(m.id)}
           className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
             mode === m.id
-              ? "bg-blue-600 text-white"
-              : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+              ? "bg-ll-primary text-ll-on-primary"
+              : "bg-ll-surface-tonal text-ll-on-surface hover:bg-ll-outline"
           }`}
           title={m.desc}
         >

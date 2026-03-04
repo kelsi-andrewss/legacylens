@@ -181,7 +181,7 @@ export default function PersonalityQuiz() {
     return (
       <div className="mx-auto max-w-2xl">
         <div className="mb-6 flex items-center justify-between">
-          <span className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+          <span className="text-sm font-medium text-ll-on-surface-muted">
             Question {currentQuestion + 1} of {QUIZ_QUESTIONS.length}
           </span>
           <div className="flex gap-1.5">
@@ -190,10 +190,10 @@ export default function PersonalityQuiz() {
                 key={i}
                 className={`h-2 w-8 rounded-full transition-colors duration-300 ${
                   i < answers.length
-                    ? "bg-blue-500"
+                    ? "bg-ll-primary"
                     : i === currentQuestion
-                      ? "bg-blue-300 dark:bg-blue-700"
-                      : "bg-zinc-200 dark:bg-zinc-700"
+                      ? "bg-ll-primary/50"
+                      : "bg-ll-surface-tonal"
                 }`}
               />
             ))}
@@ -203,7 +203,7 @@ export default function PersonalityQuiz() {
         <div
           className={`transition-opacity duration-300 ${fadeOut ? "opacity-0" : "opacity-100"}`}
         >
-          <h2 className="mb-8 text-xl font-semibold text-zinc-900 dark:text-zinc-100">
+          <h2 className="mb-8 text-xl font-semibold text-ll-on-surface">
             {question.question}
           </h2>
 
@@ -212,7 +212,7 @@ export default function PersonalityQuiz() {
               <button
                 key={i}
                 onClick={() => handleAnswer(a.trait)}
-                className="rounded-lg border border-zinc-200 bg-white px-4 py-4 text-left text-sm font-medium text-zinc-700 shadow-sm transition-all hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 active:scale-[0.98] dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:border-blue-600 dark:hover:bg-blue-950/30 dark:hover:text-blue-300"
+                className="rounded-lg border border-ll-outline bg-ll-surface-variant px-4 py-4 text-left text-sm font-medium text-ll-on-surface shadow-sm transition-all hover:border-ll-primary hover:bg-ll-primary-container hover:text-ll-on-primary-container active:scale-[0.98]"
               >
                 {a.text}
               </button>
@@ -226,30 +226,30 @@ export default function PersonalityQuiz() {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       {/* Result card */}
-      <div className="rounded-xl border border-zinc-200 bg-gradient-to-br from-blue-50 to-white p-8 shadow-sm dark:border-zinc-700 dark:from-blue-950/20 dark:to-zinc-900">
-        <div className="mb-1 text-sm font-medium uppercase tracking-wider text-blue-600 dark:text-blue-400">
+      <div className="rounded-xl border border-ll-outline bg-gradient-to-br from-ll-primary-container to-ll-surface-variant p-8 shadow-sm">
+        <div className="mb-1 text-sm font-medium uppercase tracking-wider text-ll-primary">
           You are...
         </div>
-        <h2 className="mb-2 font-mono text-3xl font-bold text-zinc-900 dark:text-zinc-100">
+        <h2 className="mb-2 font-mono text-3xl font-bold text-ll-on-surface">
           {result?.routine}
         </h2>
-        <p className="mb-3 text-lg font-medium text-blue-600 dark:text-blue-400">
+        <p className="mb-3 text-lg font-medium text-ll-primary">
           {result?.tagline}
         </p>
-        <p className="text-zinc-600 dark:text-zinc-400">
+        <p className="text-ll-on-surface-muted">
           {result?.description}
         </p>
 
         <div className="mt-6 flex gap-3">
           <button
             onClick={handleCopy}
-            className="rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+            className="rounded-lg border border-ll-outline bg-ll-surface-variant px-4 py-2 text-sm font-medium text-ll-on-surface transition-colors hover:bg-ll-surface-tonal"
           >
             {copied ? "Copied!" : "Copy Result"}
           </button>
           <button
             onClick={handleRetake}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+            className="rounded-lg bg-ll-primary px-4 py-2 text-sm font-medium text-ll-on-primary transition-colors hover:bg-ll-primary/90"
           >
             Retake Quiz
           </button>
@@ -258,7 +258,7 @@ export default function PersonalityQuiz() {
 
       {/* Streamed explanation */}
       <div>
-        <h3 className="mb-3 text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+        <h3 className="mb-3 text-lg font-semibold text-ll-on-surface">
           About {result?.routine}
         </h3>
         <AnswerStream content={answer} isStreaming={isLoading} />
@@ -267,7 +267,7 @@ export default function PersonalityQuiz() {
       {/* Code snippets */}
       {chunks.length > 0 && (
         <div>
-          <h3 className="mb-3 text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+          <h3 className="mb-3 text-lg font-semibold text-ll-on-surface">
             Source Code
           </h3>
           <div className="space-y-4">
