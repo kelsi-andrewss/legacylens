@@ -1,29 +1,27 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import SearchBar from "@/components/SearchBar";
 import ModeSelector from "@/components/ModeSelector";
 import AnswerStream from "@/components/AnswerStream";
-import CodeSnippet from "@/components/CodeSnippet";
+import CodeSnippet, { type ChunkData } from "@/components/CodeSnippet";
 import { useTheme } from "@/components/ThemeProvider";
 import Pokedex, { saveRoutineMeta } from "@/components/Pokedex";
-import { markDiscovered, isDiscovered, addXP } from "@/lib/pokedex";
+import { markDiscovered, isDiscovered, addXP, getStats } from "@/lib/pokedex";
+import Scratchpad, { type PinnedItem } from "@/components/Scratchpad";
+import ChallengeToast from "@/components/ChallengeToast";
+import { shouldTriggerChallenge, generateChallenge, type Challenge } from "@/lib/challenges";
 
-interface ChunkData {
-  id: string;
-  score: number;
-  metadata: {
-    subroutine_name: string;
-    kind: string;
-    file_path: string;
-    line_start: number;
-    line_end: number;
-    parameters: string;
-    dependencies: string;
-    data_type_prefix: string;
-    category: string;
-    text: string;
-  };
+const SCRATCHPAD_KEY = "ll-scratchpad";
+
+function loadPinnedItems(): PinnedItem[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const stored = localStorage.getItem(SCRATCHPAD_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
 }
 
 export default function Home() {
@@ -38,6 +36,59 @@ export default function Home() {
   const resolvedThemeRef = useRef(resolvedTheme);
   resolvedThemeRef.current = resolvedTheme;
   const [showPokedex, setShowPokedex] = useState(false);
+  const [pinnedItems, setPinnedItems] = useState<PinnedItem[]>(loadPinnedItems);
+  const [activeChallenge, setActiveChallenge] = useState<Challenge | null>(null);
+
+  useEffect(() => {
+    localStorage.setItem(SCRATCHPAD_KEY, JSON.stringify(pinnedItems));
+  }, [pinnedItems]);
+
+  const pinnedIds = new Set(pinnedItems.map((p) => p.id));
+
+  const handlePin = useCallback((chunk: ChunkData) => {
+    setPinnedItems((prev) => {
+      if (prev.some((p) => p.id === chunk.id)) return prev;
+      return [
+        ...prev,
+        {
+          id: chunk.id,
+          subroutine_name: chunk.metadata.subroutine_name,
+          kind: chunk.metadata.kind,
+          file_path: chunk.metadata.file_path,
+          text: chunk.metadata.text,
+          annotation: "",
+          pinnedAt: Date.now(),
+        },
+      ];
+    });
+  }, []);
+
+  const handleRemovePin = useCallback((id: string) => {
+    setPinnedItems((prev) => prev.filter((p) => p.id !== id));
+  }, []);
+
+  const handleReorder = useCallback((id: string, direction: "up" | "down") => {
+    setPinnedItems((prev) => {
+      const idx = prev.findIndex((p) => p.id === id);
+      if (idx === -1) return prev;
+      const targetIdx = direction === "up" ? idx - 1 : idx + 1;
+      if (targetIdx < 0 || targetIdx >= prev.length) return prev;
+      const next = [...prev];
+      [next[idx], next[targetIdx]] = [next[targetIdx], next[idx]];
+      return next;
+    });
+  }, []);
+
+  const handleAnnotate = useCallback((id: string, annotation: string) => {
+    setPinnedItems((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, annotation } : p))
+    );
+  }, []);
+
+  const handleChallengeComplete = useCallback((xpReward: number) => {
+    addXP(xpReward);
+    setActiveChallenge(null);
+  }, []);
 
   const handleSearch = useCallback(
     async (query: string, modeOverride?: string) => {
@@ -81,8 +132,9 @@ export default function Home() {
             try {
               const event = JSON.parse(json);
               if (event.type === "chunks") {
-                setChunks(event.data);
-                for (const chunk of event.data as ChunkData[]) {
+                const receivedChunks = event.data as ChunkData[];
+                setChunks(receivedChunks);
+                for (const chunk of receivedChunks) {
                   const name = chunk.metadata.subroutine_name;
                   if (name) {
                     const alreadyKnown = isDiscovered(name);
@@ -91,6 +143,15 @@ export default function Home() {
                     if (!alreadyKnown) {
                       addXP(10);
                     }
+                  }
+                }
+                // Check for challenge trigger after discoveries
+                const stats = getStats();
+                if (shouldTriggerChallenge(stats)) {
+                  const randomChunk = receivedChunks[Math.floor(Math.random() * receivedChunks.length)];
+                  if (randomChunk) {
+                    const challenge = generateChallenge(randomChunk.metadata);
+                    setActiveChallenge(challenge);
                   }
                 }
               } else if (event.type === "text") {
@@ -207,7 +268,12 @@ export default function Home() {
                   Retrieved Code ({chunks.length} chunks)
                 </h2>
                 {chunks.map((chunk) => (
-                  <CodeSnippet key={chunk.id} chunk={chunk} />
+                  <CodeSnippet
+                    key={chunk.id}
+                    chunk={chunk}
+                    onPin={handlePin}
+                    isPinned={pinnedIds.has(chunk.id)}
+                  />
                 ))}
               </div>
             )}
@@ -246,8 +312,23 @@ export default function Home() {
             </>
             )}
           </div>
+
+          {/* Scratchpad sidebar (desktop) */}
+          <Scratchpad
+            items={pinnedItems}
+            onRemove={handleRemovePin}
+            onReorder={handleReorder}
+            onAnnotate={handleAnnotate}
+          />
         </div>
       </main>
+
+      {activeChallenge && (
+        <ChallengeToast
+          challenge={activeChallenge}
+          onComplete={handleChallengeComplete}
+        />
+      )}
     </div>
   );
 }
