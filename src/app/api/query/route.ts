@@ -32,6 +32,8 @@ export async function POST(req: NextRequest) {
 
     const sanitizedQuery = sanitizeString(query);
     const sanitizedTheme = theme ? sanitizeString(theme) : undefined;
+    const systemPrompt = getSystemPrompt(mode as QueryMode, sanitizedTheme, lens);
+    const t0 = Date.now();
 
     // Build Pinecone filter
     const pineconeFilter: Record<string, unknown> = {};
@@ -44,6 +46,7 @@ export async function POST(req: NextRequest) {
 
     // Embed query
     const embedding = await embedQuery(sanitizedQuery);
+    const embedMs = Date.now() - t0;
 
     // Search Pinecone — synthetic chunks included only for explain mode (most benefit from cached context).
     const matches = await queryPinecone(
@@ -53,6 +56,7 @@ export async function POST(req: NextRequest) {
       { includeSynthetic: mode === "explain" }
     );
 
+    const pineconeMs = Date.now() - t0 - embedMs;
     const filteredMatches = matches.filter(m => (m.score ?? 0) >= MIN_SCORE_THRESHOLD);
     const filtersApplied = Object.keys(pineconeFilter).length > 0;
 
@@ -86,11 +90,11 @@ export async function POST(req: NextRequest) {
       }
     }
     const expanded = await fetchRoutinesByNames([...new Set(depsToFetch)]);
+    const expansionMs = Date.now() - t0 - embedMs - pineconeMs;
     console.log(`[graph-expansion] initial=${filteredMatches.length} deps_to_fetch=${depsToFetch.length} expanded=${expanded.length}`);
     const allMatches = [...filteredMatches, ...expanded].slice(0, GRAPH_EXPANSION_MAX_CHUNKS);
 
     // Build context
-    const systemPrompt = getSystemPrompt(mode as QueryMode, sanitizedTheme, lens);
     const userMessage = buildUserMessage(sanitizedQuery, allMatches as { metadata: Record<string, unknown>; score?: number }[]);
 
     // Stream response from GPT-4o-mini
@@ -133,6 +137,10 @@ export async function POST(req: NextRequest) {
             }
           }
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "done" })}\n\n`));
+          const totalMs = Date.now() - t0;
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify({ type: "timing", data: { embedMs, pineconeMs, expansionMs, totalMs } })}\n\n`)
+          );
           controller.close();
         } catch (error) {
           const message = error instanceof Error ? error.message : "Stream error";
