@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import SearchBar from "@/components/SearchBar";
 import ModeSelector from "@/components/ModeSelector";
 import AnswerStream from "@/components/AnswerStream";
@@ -28,6 +28,8 @@ export default function Home() {
   const [mode, setMode] = useState("explain");
   const [answer, setAnswer] = useState("");
   const [chunks, setChunks] = useState<ChunkData[]>([]);
+  const [lastQuery, setLastQuery] = useState("");
+  const abortControllerRef = useRef<AbortController | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
@@ -98,16 +100,25 @@ export default function Home() {
 
   const handleSearch = useCallback(
     async (query: string, modeOverride?: string) => {
+      abortControllerRef.current?.abort();
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+
       const activeMode = modeOverride || mode;
       setIsLoading(true);
       setAnswer("");
       setChunks([]);
+
+      if (query.trim()) {
+        setLastQuery(query);
+      }
 
       try {
         const response = await fetch("/api/query", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ query, mode: activeMode }),
+          signal: controller.signal,
         });
 
         if (!response.ok) {
@@ -165,6 +176,7 @@ export default function Home() {
           }
         }
       } catch (error) {
+        if (error instanceof Error && error.name === "AbortError") return;
         console.error("Search error:", error);
         setAnswer("An error occurred while searching. Please try again.");
       } finally {
@@ -173,6 +185,13 @@ export default function Home() {
     },
     [mode]
   );
+
+  const handleModeChange = useCallback((newMode: string) => {
+    setMode(newMode);
+    if (lastQuery && (chunks.length > 0 || answer)) {
+      handleSearch(lastQuery, newMode);
+    }
+  }, [lastQuery, chunks, answer, handleSearch]);
 
   const filteredChunks = chunks.filter((chunk) => {
     if (categoryFilter && chunk.metadata.category !== categoryFilter) return false;
@@ -272,7 +291,7 @@ export default function Home() {
               externalQuery={exampleQuery}
             />
             <SuggestedSearches onSelect={handleSuggestedSelect} />
-            <ModeSelector mode={mode} onModeChange={setMode} />
+            <ModeSelector mode={mode} onModeChange={handleModeChange} />
 
             {(answer || isLoading) && (
               <AnswerStream
