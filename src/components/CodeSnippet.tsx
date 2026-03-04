@@ -3,6 +3,7 @@
 import { Light as SyntaxHighlighter } from "react-syntax-highlighter";
 import fortran from "react-syntax-highlighter/dist/esm/languages/hljs/fortran";
 import { atomOneDark } from "react-syntax-highlighter/dist/esm/styles/hljs";
+import DependencyGraph from "./DependencyGraph";
 
 SyntaxHighlighter.registerLanguage("fortran", fortran);
 
@@ -76,8 +77,17 @@ export default function CodeSnippet({ chunk }: CodeSnippetProps) {
       <div className="px-4 py-2 text-xs text-ll-on-surface-muted flex flex-wrap gap-x-4 gap-y-1 border-b border-ll-outline">
         <span>{m.file_path}:{m.line_start}-{m.line_end}</span>
         {m.parameters && <span>Params: {m.parameters}</span>}
-        {m.dependencies && <span>Calls: {m.dependencies}</span>}
       </div>
+
+      {m.dependencies && (
+        <div className="border-b border-ll-outline">
+          <DependencyGraph
+            routineName={m.subroutine_name}
+            dependencies={m.dependencies}
+            dataTypePrefix={m.data_type_prefix}
+          />
+        </div>
+      )}
 
       <div className="max-h-80 overflow-auto">
         <SyntaxHighlighter
