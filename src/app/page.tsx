@@ -190,17 +190,6 @@ export default function Home() {
         </div>
       </header>
 
-      {tutorialStep !== null && (
-        <TutorialBanner
-          step={tutorialStep}
-          onNext={() => {
-            if (tutorialStep < TOUR_STEPS.length - 1) setTutorialStep((t) => (t !== null ? t + 1 : null));
-            else setTutorialStep(null);
-          }}
-          onExit={() => setTutorialStep(null)}
-        />
-      )}
-
       <main className="mx-auto max-w-6xl px-4 py-8">
         <div className="flex gap-8">
           {/* Sidebar filters */}
@@ -293,6 +282,16 @@ export default function Home() {
           </div>
         </div>
       </main>
+      {tutorialStep !== null && (
+        <TutorialBanner
+          step={tutorialStep}
+          onNext={() => {
+            if (tutorialStep < TOUR_STEPS.length - 1) setTutorialStep((t) => (t !== null ? t + 1 : null));
+            else setTutorialStep(null);
+          }}
+          onExit={() => setTutorialStep(null)}
+        />
+      )}
     </div>
   );
 }

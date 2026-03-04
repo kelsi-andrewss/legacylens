@@ -92,56 +92,103 @@ export interface TutorialBannerProps {
   onExit: () => void;
 }
 
-export default function TutorialBanner({ step, onNext, onExit }: TutorialBannerProps) {
+type CardPos = {
+  top?: number;
+  bottom?: number;
+  left?: number;
+  right?: number;
+  arrow: "left" | "right" | "top" | "bottom";
+};
+
+const CARD_POSITIONS: Record<string, CardPos> = {
+  search:  { top: 148, right: 24, arrow: "left"  },
+  mode:    { top: 218, right: 24, arrow: "left"  },
+  chunks:  { bottom: 32, right: 24, arrow: "top" },
+  answer:  { bottom: 32, right: 24, arrow: "top" },
+  sidebar: { top: 200, left: 212, arrow: "left"  },
+};
+const DEFAULT_POS: CardPos = { bottom: 32, right: 24, arrow: "top" };
+
+export default function TourCard({ step, onNext, onExit }: TutorialBannerProps) {
   const total = TOUR_STEPS.length;
   const current = TOUR_STEPS[step];
   const isLast = step === total - 1;
 
+  const { arrow, ...posStyle } = CARD_POSITIONS[current.highlight ?? ""] ?? DEFAULT_POS;
+
   return (
-    <div className="border-b border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/40">
-      <div className="mx-auto max-w-6xl px-4 py-3 flex flex-row items-start gap-4">
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-sm font-semibold text-blue-900 dark:text-blue-100">
-              Step {step + 1} of {total} — {current.title}
-            </span>
-            <span className="inline-flex items-center rounded bg-blue-200 px-1.5 py-0.5 text-xs font-mono text-blue-800 dark:bg-blue-800 dark:text-blue-200">
-              [{step + 1}/{total}]
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            {current.waitFor && (
-              <span className="shrink-0 rounded-full bg-blue-600 px-2 py-0.5 text-xs font-semibold text-white dark:bg-blue-500">
-                Your turn
-              </span>
-            )}
-            <p className="text-sm text-blue-800 dark:text-blue-200">{current.commentary}</p>
+    <div
+      style={{ position: "fixed", zIndex: 50, ...posStyle }}
+      className="w-72 overflow-visible rounded-xl bg-white shadow-xl ring-1 ring-black/5 transition-all duration-300 dark:bg-zinc-900 dark:ring-white/10"
+    >
+      {/* Arrow */}
+      {arrow === "left" && (
+        <div className="absolute -left-2 top-6 h-0 w-0 border-y-8 border-y-transparent border-r-8 border-r-white dark:border-r-zinc-900" />
+      )}
+      {arrow === "top" && (
+        <div className="absolute -top-2 right-6 h-0 w-0 border-x-8 border-x-transparent border-b-8 border-b-white dark:border-b-zinc-900" />
+      )}
+
+      {/* Header: step counter + dots + close */}
+      <div className="flex items-center justify-between px-4 pb-2 pt-4">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+            Step {step + 1} of {total}
+          </span>
+          <div className="flex items-center gap-1">
+            {TOUR_STEPS.map((_, i) => (
+              <span
+                key={i}
+                className={`h-1.5 w-1.5 rounded-full transition-colors ${
+                  i === step ? "bg-blue-600" : "bg-blue-200 dark:bg-blue-800"
+                }`}
+              />
+            ))}
           </div>
         </div>
-        <div className="shrink-0 flex items-center gap-2">
-          {isLast ? (
-            <button
-              onClick={onNext}
-              className="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
-            >
-              Finish
-            </button>
-          ) : (
-            <button
-              onClick={onNext}
-              className="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
-            >
-              {current.waitFor ? "Skip →" : "Next →"}
-            </button>
+        <button
+          onClick={onExit}
+          className="rounded p-0.5 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
+          aria-label="Exit tutorial"
+        >
+          ✕
+        </button>
+      </div>
+
+      {/* Body */}
+      <div className="px-4 pb-4">
+        <h3 className="mb-2 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+          {current.title}
+        </h3>
+        <div className="flex items-start gap-2">
+          {current.waitFor && (
+            <span className="shrink-0 rounded-full bg-blue-600 px-2 py-0.5 text-xs font-semibold text-white dark:bg-blue-500">
+              Your turn
+            </span>
           )}
-          <button
-            onClick={onExit}
-            className="rounded px-2 py-1.5 text-sm font-medium text-blue-700 hover:bg-blue-100 dark:text-blue-300 dark:hover:bg-blue-900"
-            aria-label="Exit tutorial"
-          >
-            ✕
-          </button>
+          <p className="text-xs leading-relaxed text-zinc-600 dark:text-zinc-400">
+            {current.commentary}
+          </p>
         </div>
+      </div>
+
+      {/* Footer */}
+      <div className="flex justify-end border-t border-zinc-100 px-4 py-3 dark:border-zinc-800">
+        {isLast ? (
+          <button
+            onClick={onNext}
+            className="rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+          >
+            Finish
+          </button>
+        ) : (
+          <button
+            onClick={onNext}
+            className="rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+          >
+            {current.waitFor ? "Skip →" : "Next →"}
+          </button>
+        )}
       </div>
     </div>
   );
