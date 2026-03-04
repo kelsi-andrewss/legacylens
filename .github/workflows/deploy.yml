@@ -46,20 +46,22 @@ jobs:
 
       - name: Deploy to Vercel
         run: |
+          # Trim any whitespace/newlines from secrets
+          ORG_ID=$(echo "${{ secrets.VERCEL_ORG_ID }}" | tr -d '[:space:]')
+          PROJECT_ID="${{ steps.vercel-project.outputs.project_id }}"
+
           DEPLOY_ARGS="--yes \
             --env OPENAI_API_KEY=$OPENAI_API_KEY \
             --env PINECONE_API_KEY=$PINECONE_API_KEY \
             --env PINECONE_INDEX=$PINECONE_INDEX \
-            --token=$VERCEL_TOKEN"
+            --token=${{ secrets.VERCEL_TOKEN }}"
 
           if [ "${{ github.ref }}" = "refs/heads/main" ] && [ "${{ github.event_name }}" = "push" ]; then
-            vercel deploy $DEPLOY_ARGS --prod
+            VERCEL_ORG_ID="$ORG_ID" VERCEL_PROJECT_ID="$PROJECT_ID" vercel deploy $DEPLOY_ARGS --prod
           else
-            vercel deploy $DEPLOY_ARGS
+            VERCEL_ORG_ID="$ORG_ID" VERCEL_PROJECT_ID="$PROJECT_ID" vercel deploy $DEPLOY_ARGS
           fi
         env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ steps.vercel-project.outputs.project_id }}
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
