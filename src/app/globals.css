@@ -140,6 +140,12 @@ body {
 
 /* === Theme Flourishes === */
 
+/* Base header stacking context — keeps ThemePicker dropdown above main content */
+.theme-header {
+  position: relative;
+  z-index: 50;
+}
+
 /* Punch Card: orange bottom border on header, command prompt in search */
 [data-theme="punch-card"] .theme-header {
   border-bottom: 4px solid var(--ll-primary);
