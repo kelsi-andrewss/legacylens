@@ -34,16 +34,16 @@ type GameId = (typeof GAMES)[number]["id"];
 
 const gameComponents: Record<GameId, ReturnType<typeof dynamic>> = {
   similarity: dynamic(() => import("@/components/games/SimilarityShowdown"), {
-    loading: () => <p className="text-zinc-500">Loading...</p>,
+    loading: () => <p className="text-ll-on-surface-muted">Loading...</p>,
   }),
   quiz: dynamic(() => import("@/components/games/PersonalityQuiz"), {
-    loading: () => <p className="text-zinc-500">Loading...</p>,
+    loading: () => <p className="text-ll-on-surface-muted">Loading...</p>,
   }),
   connections: dynamic(() => import("@/components/games/ConnectionsGame"), {
-    loading: () => <p className="text-zinc-500">Loading...</p>,
+    loading: () => <p className="text-ll-on-surface-muted">Loading...</p>,
   }),
   roulette: dynamic(() => import("@/components/games/RoutineRoulette"), {
-    loading: () => <p className="text-zinc-500">Loading...</p>,
+    loading: () => <p className="text-ll-on-surface-muted">Loading...</p>,
   }),
 };
 
@@ -53,11 +53,11 @@ export default function PlayPage() {
   if (activeGame) {
     const GameComponent = gameComponents[activeGame];
     return (
-      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
+      <div className="min-h-screen bg-ll-surface">
         <main className="mx-auto max-w-4xl px-4 py-8">
           <button
             onClick={() => setActiveGame(null)}
-            className="mb-6 text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
+            className="mb-6 text-sm text-ll-on-surface-muted hover:text-ll-on-surface transition-colors"
           >
             &larr; Back to Games
           </button>
@@ -68,13 +68,13 @@ export default function PlayPage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
+    <div className="min-h-screen bg-ll-surface">
       <main className="mx-auto max-w-4xl px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+          <h1 className="text-2xl font-bold text-ll-on-surface">
             Games
           </h1>
-          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+          <p className="mt-1 text-sm text-ll-on-surface-muted">
             Learn LAPACK the fun way
           </p>
         </div>
@@ -84,16 +84,16 @@ export default function PlayPage() {
             <button
               key={game.id}
               onClick={() => setActiveGame(game.id)}
-              className="rounded-lg border border-zinc-200 bg-white p-6 text-left dark:border-zinc-800 dark:bg-zinc-900 hover:border-blue-300 dark:hover:border-blue-600 transition-colors cursor-pointer"
+              className="rounded-lg border border-ll-outline bg-ll-surface-variant p-6 text-left hover:border-ll-primary transition-colors cursor-pointer"
             >
               <span className="text-3xl">{game.icon}</span>
-              <h2 className="mt-3 font-semibold text-zinc-900 dark:text-zinc-100">
+              <h2 className="mt-3 font-semibold text-ll-on-surface">
                 {game.title}
               </h2>
-              <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+              <p className="mt-1 text-sm text-ll-on-surface-muted">
                 {game.description}
               </p>
-              <span className="mt-3 inline-block text-sm font-medium text-blue-600 dark:text-blue-400">
+              <span className="mt-3 inline-block text-sm font-medium text-ll-primary">
                 Play &rarr;
               </span>
             </button>

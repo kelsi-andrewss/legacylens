@@ -33,10 +33,10 @@ export default function CodeSnippet({ chunk }: CodeSnippetProps) {
   const githubUrl = `https://github.com/Reference-LAPACK/lapack/blob/master/${m.file_path}#L${m.line_start}`;
 
   return (
-    <div className="rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900 overflow-hidden">
-      <div className="flex items-center justify-between border-b border-zinc-200 bg-zinc-50 px-4 py-2 dark:border-zinc-800 dark:bg-zinc-800/50">
+    <div className="rounded-lg border border-ll-outline bg-ll-surface-variant shadow-sm overflow-hidden">
+      <div className="flex items-center justify-between border-b border-ll-outline bg-ll-surface-tonal px-4 py-2">
         <div className="flex items-center gap-2">
-          <span className="font-mono text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+          <span className="font-mono text-sm font-semibold text-ll-on-surface">
             {m.kind} {m.subroutine_name}
           </span>
           <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
@@ -47,7 +47,7 @@ export default function CodeSnippet({ chunk }: CodeSnippetProps) {
             {m.category}
           </span>
           {m.data_type_prefix && (
-            <span className="rounded-full bg-zinc-200 px-2 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-700 dark:text-zinc-400">
+            <span className="rounded-full bg-ll-surface-tonal px-2 py-0.5 text-xs font-medium text-ll-on-surface-muted">
               {m.data_type_prefix}
             </span>
           )}
@@ -57,7 +57,7 @@ export default function CodeSnippet({ chunk }: CodeSnippetProps) {
             href={githubUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors"
+            className="text-xs text-ll-on-surface-muted hover:text-ll-on-surface transition-colors"
           >
             View on GitHub ↗
           </a>
@@ -73,7 +73,7 @@ export default function CodeSnippet({ chunk }: CodeSnippetProps) {
         </div>
       </div>
 
-      <div className="px-4 py-2 text-xs text-zinc-500 dark:text-zinc-400 flex flex-wrap gap-x-4 gap-y-1 border-b border-zinc-100 dark:border-zinc-800">
+      <div className="px-4 py-2 text-xs text-ll-on-surface-muted flex flex-wrap gap-x-4 gap-y-1 border-b border-ll-outline">
         <span>{m.file_path}:{m.line_start}-{m.line_end}</span>
         {m.parameters && <span>Params: {m.parameters}</span>}
         {m.dependencies && <span>Calls: {m.dependencies}</span>}
