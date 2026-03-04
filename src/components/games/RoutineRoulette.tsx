@@ -183,13 +183,13 @@ export default function RoutineRoulette() {
         <div className="relative flex items-center justify-center">
           {/* Outer decorative ring */}
           <div
-            className={`absolute h-40 w-40 rounded-full border-4 border-dashed border-ll-primary/40 ${
+            className={`absolute h-40 w-40 rounded-full border-4 border-dashed border-ll-primary-faint ${
               spinning ? "animate-spin" : ""
             }`}
           />
           {/* Inner decorative ring */}
           <div
-            className={`absolute h-36 w-36 rounded-full border-2 border-ll-primary/20 ${
+            className={`absolute h-36 w-36 rounded-full border-2 border-ll-primary-faint ${
               spinning ? "animate-spin [animation-direction:reverse]" : ""
             }`}
           />
@@ -197,7 +197,7 @@ export default function RoutineRoulette() {
           {!routine && !spinning ? (
             <button
               onClick={handleSpin}
-              className="relative z-10 flex h-32 w-32 items-center justify-center rounded-full bg-ll-primary text-xl font-bold text-ll-on-primary shadow-lg transition-transform hover:scale-105 hover:bg-ll-primary/90 active:scale-95"
+              className="relative z-10 flex h-32 w-32 items-center justify-center rounded-full bg-ll-primary text-xl font-bold text-ll-on-primary shadow-lg transition-transform hover:scale-105 hover:bg-ll-primary-hover active:scale-95"
             >
               SPIN
             </button>
@@ -205,7 +205,7 @@ export default function RoutineRoulette() {
             <div
               className={`relative z-10 flex h-32 w-32 items-center justify-center rounded-full ${
                 spinning
-                  ? "bg-ll-primary shadow-ll-primary/30 shadow-xl"
+                  ? "bg-ll-primary shadow-xl"
                   : "bg-ll-surface-tonal"
               }`}
             >
@@ -308,7 +308,7 @@ export default function RoutineRoulette() {
             <button
               onClick={handleSpinAgain}
               disabled={spinning}
-              className="rounded-full bg-ll-primary px-8 py-3 font-semibold text-ll-on-primary shadow transition-transform hover:scale-105 hover:bg-ll-primary/90 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
+              className="rounded-full bg-ll-primary px-8 py-3 font-semibold text-ll-on-primary shadow transition-transform hover:scale-105 hover:bg-ll-primary-hover active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
             >
               Spin Again
             </button>

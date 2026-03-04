@@ -192,7 +192,7 @@ export default function PersonalityQuiz() {
                   i < answers.length
                     ? "bg-ll-primary"
                     : i === currentQuestion
-                      ? "bg-ll-primary/50"
+                      ? "bg-ll-primary-muted"
                       : "bg-ll-surface-tonal"
                 }`}
               />
@@ -249,7 +249,7 @@ export default function PersonalityQuiz() {
           </button>
           <button
             onClick={handleRetake}
-            className="rounded-lg bg-ll-primary px-4 py-2 text-sm font-medium text-ll-on-primary transition-colors hover:bg-ll-primary/90"
+            className="rounded-lg bg-ll-primary px-4 py-2 text-sm font-medium text-ll-on-primary transition-colors hover:bg-ll-primary-hover"
           >
             Retake Quiz
           </button>
