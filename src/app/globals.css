@@ -10,84 +10,8 @@
   --z-toast: 50;
 }
 
-/* ── SSR fallback: punch-card defaults ── */
+/* ── SSR fallback: Joy theme defaults ── */
 :root {
-  --ll-surface: #F5F0E8;
-  --ll-surface-variant: #EDE8DC;
-  --ll-surface-tonal: #E5DFD0;
-  --ll-primary: #C2410C;
-  --ll-secondary: #6B7A2E;
-  --ll-on-surface: #1A1208;
-  --ll-on-surface-muted: #6B5D45;
-  --ll-on-primary: #FFFFFF;
-  --ll-on-primary-container: #7A3410;
-  --ll-primary-container: #FDDCC8;
-  --ll-outline: #C4B89A;
-  --ll-radius-sm: 2px;
-  --ll-radius-md: 4px;
-  --ll-radius-lg: 4px;
-  --ll-font-display: var(--font-ibm-plex-mono);
-  --ll-font-body: var(--font-ibm-plex-sans);
-  --ll-font-mono: var(--font-geist-mono);
-  --ll-primary-hover: #A84615;
-  --ll-primary-faint: #F5DCC8;
-  --ll-primary-muted: #B45309;
-  --ll-on-surface-hover: #3D2F1A;
-}
-
-/* ── Punch Card ── */
-[data-theme="punch-card"] {
-  --ll-surface: #F5F0E8;
-  --ll-surface-variant: #EDE8DC;
-  --ll-surface-tonal: #E5DFD0;
-  --ll-primary: #C2410C;
-  --ll-secondary: #6B7A2E;
-  --ll-on-surface: #1A1208;
-  --ll-on-surface-muted: #6B5D45;
-  --ll-on-primary: #FFFFFF;
-  --ll-on-primary-container: #7A3410;
-  --ll-primary-container: #FDDCC8;
-  --ll-outline: #C4B89A;
-  --ll-radius-sm: 2px;
-  --ll-radius-md: 4px;
-  --ll-radius-lg: 4px;
-  --ll-font-display: var(--font-ibm-plex-mono);
-  --ll-font-body: var(--font-ibm-plex-sans);
-  --ll-font-mono: var(--font-geist-mono);
-  --ll-primary-hover: #A84615;
-  --ll-primary-faint: #F5DCC8;
-  --ll-primary-muted: #B45309;
-  --ll-on-surface-hover: #3D2F1A;
-}
-
-
-/* ── Blueprint ── */
-[data-theme="blueprint"] {
-  --ll-surface: #F4F6FA;
-  --ll-surface-variant: #FFFFFF;
-  --ll-surface-tonal: #E8ECF4;
-  --ll-primary: #1B3A6B;
-  --ll-secondary: #4A6FA5;
-  --ll-on-surface: #0F1929;
-  --ll-on-surface-muted: #475569;
-  --ll-on-primary: #FFFFFF;
-  --ll-on-primary-container: #1B3A6B;
-  --ll-primary-container: #D4E0F0;
-  --ll-outline: #94A3B8;
-  --ll-radius-sm: 4px;
-  --ll-radius-md: 8px;
-  --ll-radius-lg: 12px;
-  --ll-font-display: var(--font-archivo-narrow);
-  --ll-font-body: var(--font-archivo-narrow);
-  --ll-font-mono: var(--font-geist-mono);
-  --ll-primary-hover: #152E55;
-  --ll-primary-faint: #D4E0F0;
-  --ll-primary-muted: #4A6899;
-  --ll-on-surface-hover: #2A3A50;
-}
-
-/* ── Joy ── */
-[data-theme="joy"] {
   --ll-surface: #1a1a2e;
   --ll-surface-variant: #1e2240;
   --ll-surface-tonal: #232850;
@@ -109,10 +33,6 @@
   --ll-primary-faint: #0a2a3a;
   --ll-primary-muted: #0099b8;
   --ll-on-surface-hover: #f0eef8;
-}
-
-[data-theme="joy"] body {
-  background: linear-gradient(145deg, #1a1a2e 0%, #16213e 100%);
 }
 
 /* ── Tailwind v4 bridge ── */
@@ -148,7 +68,7 @@
 }
 
 body {
-  background: var(--ll-surface);
+  background: linear-gradient(145deg, #1a1a2e 0%, #16213e 100%);
   color: var(--ll-on-surface);
 }
 
@@ -158,218 +78,33 @@ body {
 .theme-header {
   position: relative;
   z-index: var(--z-sticky);
+  background: var(--ll-surface-variant);
+  border-bottom: 3px solid;
+  border-image: linear-gradient(90deg, #00d4ff, #ff006e) 1;
 }
 
-/* Punch Card: orange bottom border on header, command prompt in search */
-[data-theme="punch-card"] .theme-header {
-  border-bottom: 4px solid var(--ll-primary);
+.theme-header a.text-2xl {
+  background: linear-gradient(90deg, #00d4ff, #7b61ff, #ff006e);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-[data-theme="punch-card"] .theme-search {
-  position: relative;
-}
-
-[data-theme="punch-card"] .theme-search::before {
-  content: ">";
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--ll-primary);
-  font-family: var(--ll-font-mono);
-  font-weight: 700;
-  font-size: 1rem;
-  z-index: var(--z-float);
-  pointer-events: none;
-}
-
-[data-theme="punch-card"] .theme-search input {
-  padding-left: 2rem;
-}
-
-
-/* Blueprint: grid paper background, inset card shadows */
-[data-theme="blueprint"] body {
-  background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M 24 0 L 0 0 0 24' fill='none' stroke='%2394A3B8' stroke-width='0.5'/%3E%3C/svg%3E");
-  background-repeat: repeat;
-}
-
-[data-theme="blueprint"] .bg-ll-surface-variant {
-  box-shadow: inset 0 1px 3px rgba(15, 25, 41, 0.08);
-}
-
-/* Blueprint: paper texture noise overlay */
-[data-theme="blueprint"] body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: var(--z-decoration);
-  opacity: 0.04;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-repeat: repeat;
-  background-size: 200px 200px;
-}
-
-/* Blueprint: vignette overlay */
-[data-theme="blueprint"] body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: var(--z-decoration);
-  background: radial-gradient(ellipse at center, transparent 50%, rgba(15, 25, 41, 0.12) 100%);
-}
-
-/* Blueprint: over-shot ink lines on bordered elements */
-[data-theme="blueprint"] .rounded-lg[class*="border"] {
-  position: relative;
-  overflow: visible;
-}
-
-[data-theme="blueprint"] .rounded-lg[class*="border"]::before,
-[data-theme="blueprint"] .rounded-lg[class*="border"]::after {
-  content: "";
-  position: absolute;
-  background: var(--ll-outline);
-  pointer-events: none;
-  z-index: var(--z-float);
-}
-
-/* Top-left corner: horizontal over-shot */
-[data-theme="blueprint"] .rounded-lg[class*="border"]::before {
-  top: -1px;
-  left: -6px;
-  width: 12px;
-  height: 1px;
-}
-
-/* Top-left corner: vertical over-shot */
-[data-theme="blueprint"] .rounded-lg[class*="border"]::after {
-  top: -6px;
-  left: -1px;
-  width: 1px;
-  height: 12px;
-}
-
-/* ── Punch Card: Tractor Feed ── */
-.tractor-feed {
-  position: relative;
-}
-
-.tractor-feed::before,
-.tractor-feed::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 16px;
-  pointer-events: none;
-  z-index: var(--z-float);
-  background-image: radial-gradient(circle, var(--ll-outline) 3px, transparent 3px);
-  background-size: 16px 18px;
-  background-position: center 4px;
-  background-repeat: repeat-y;
-}
-
-.tractor-feed::before {
-  left: -20px;
-  border-right: 1px dashed var(--ll-outline);
-}
-
-.tractor-feed::after {
-  right: -20px;
-  border-left: 1px dashed var(--ll-outline);
-}
-
-/* Punch Card: continuous paper texture on tractor-feed */
-[data-theme="punch-card"] .tractor-feed {
-  background-color: #F8F4EC;
-  background-image:
-    repeating-linear-gradient(
-      to bottom,
-      transparent,
-      transparent 279px,
-      rgba(180, 170, 150, 0.15) 279px,
-      rgba(180, 170, 150, 0.15) 280px
-    );
-  margin-left: 24px;
-  margin-right: 24px;
-}
-
-/* ── Punch Card: Toggle Switch Submit Button ── */
-[data-theme="punch-card"] .toggle-switch-btn {
-  position: relative;
-  width: 64px;
-  height: 32px;
-  border-radius: 16px;
-  background: var(--ll-surface-tonal);
-  border: 2px solid var(--ll-outline);
-  padding: 0;
-  cursor: pointer;
-  transition: background-color 200ms, border-color 200ms;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-[data-theme="punch-card"] .toggle-switch-btn .toggle-switch-knob {
-  display: block;
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #E8E0D0, #D0C8B8);
-  border: 1px solid var(--ll-outline);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-  transition: transform 200ms, background 200ms;
-}
-
-[data-theme="punch-card"] .toggle-switch-btn:not(:disabled):hover {
-  border-color: var(--ll-primary);
-}
-
-[data-theme="punch-card"] .toggle-switch-btn:not(:disabled):hover .toggle-switch-knob {
-  background: linear-gradient(135deg, #F0E8D8, #E0D8C8);
-}
-
-/* "On" state when query is present (not disabled by empty query) */
-[data-theme="punch-card"] .toggle-switch-btn.toggle-on {
-  background: var(--ll-primary-container);
-  border-color: var(--ll-primary);
-}
-
-[data-theme="punch-card"] .toggle-switch-btn.toggle-on .toggle-switch-knob {
-  transform: translateX(32px);
-  background: linear-gradient(135deg, var(--ll-primary), var(--ll-primary-hover));
-  border-color: var(--ll-primary-hover);
-}
-
-[data-theme="punch-card"] .toggle-switch-btn:focus-visible {
-  outline: 2px solid var(--ll-primary);
-  outline-offset: 2px;
-}
-
-[data-theme="punch-card"] .toggle-switch-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* ── Joy: Ghost-Map Focus Effect ── */
-[data-theme="joy"] .ghost-map-item {
+/* ── Ghost-Map Focus Effect ── */
+.ghost-map-item {
   transition: opacity 300ms ease;
 }
 
-[data-theme="joy"] .ghost-map-container:hover .ghost-map-item {
+.ghost-map-container:hover .ghost-map-item {
   opacity: 0.4;
   transition: opacity 300ms ease;
 }
 
-[data-theme="joy"] .ghost-map-container:hover .ghost-map-item:hover {
+.ghost-map-container:hover .ghost-map-item:hover {
   opacity: 1;
 }
 
-/* ── Joy: Snap-to-Focus Micro-Interactions ── */
+/* ── Snap-to-Focus Micro-Interactions ── */
 @keyframes specular-glow {
   0%, 100% {
     box-shadow: 0 0 0 rgba(0, 212, 255, 0);
@@ -379,20 +114,20 @@ body {
   }
 }
 
-[data-theme="joy"] .snap-focus {
+.snap-focus {
   transition:
     transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1),
     box-shadow 300ms ease,
     opacity 200ms ease;
 }
 
-[data-theme="joy"] .snap-focus:hover {
+.snap-focus:hover {
   transform: scale(1.005);
   box-shadow: 0 0 24px rgba(0, 212, 255, 0.12);
 }
 
-/* ── Semantic Tracers (Joy theme only) ── */
-[data-theme="joy"] .semantic-tracer-inline {
+/* ── Semantic Tracers ── */
+.semantic-tracer-inline {
   cursor: pointer;
   transition: background-color 150ms, border-color 150ms;
   border-bottom: 2px solid transparent;
@@ -400,44 +135,30 @@ body {
   border-radius: 2px;
 }
 
-[data-theme="joy"] .semantic-tracer-inline:hover,
-[data-theme="joy"] .semantic-tracer-inline[data-tracer-active] {
+.semantic-tracer-inline:hover,
+.semantic-tracer-inline[data-tracer-active] {
   background: rgba(0, 212, 255, 0.15);
   border-bottom-color: #00d4ff;
 }
 
-[data-theme="joy"] .semantic-tracer-badge {
+.semantic-tracer-badge {
   cursor: pointer;
   transition: color 150ms;
 }
 
-[data-theme="joy"] .semantic-tracer-badge:hover {
+.semantic-tracer-badge:hover {
   color: #00d4ff;
 }
 
-[data-theme="joy"] .semantic-tracer-card {
+.semantic-tracer-card {
   transition: box-shadow 150ms;
 }
 
-[data-theme="joy"] .semantic-tracer-card[data-tracer-active] {
+.semantic-tracer-card[data-tracer-active] {
   box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.4);
 }
 
-/* ── Joy: Header gradient accents ── */
-[data-theme="joy"] .theme-header {
-  background: var(--ll-surface-variant);
-  border-bottom: 3px solid;
-  border-image: linear-gradient(90deg, #00d4ff, #ff006e) 1;
-}
-
-[data-theme="joy"] .theme-header a.text-2xl {
-  background: linear-gradient(90deg, #00d4ff, #7b61ff, #ff006e);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-/* ── Joy: Reveal/Unlocking Transitions ── */
+/* ── Reveal/Unlocking Transitions ── */
 @keyframes reveal-enter {
   from {
     opacity: 0;
@@ -449,10 +170,10 @@ body {
   }
 }
 
-[data-theme="joy"] .reveal-enter {
+.reveal-enter {
   animation: reveal-enter 400ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
-[data-theme="joy"] .warm-streaming-glow {
+.warm-streaming-glow {
   text-shadow: 0 0 12px rgba(255, 179, 71, 0.3);
 }
