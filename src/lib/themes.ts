@@ -18,13 +18,13 @@ export const THEMES: ThemeMeta[] = [
     id: "punch-card",
     name: "Punch Card",
     description: "Retro mainframe",
-    previewColors: { surface: "#F5F0E8", primary: "#C4541A" },
+    previewColors: { surface: "#F5F0E8", primary: "#C2410C" },
   },
   {
     id: "kinetic-obsidian",
     name: "Kinetic Obsidian",
     description: "Dark pro IDE",
-    previewColors: { surface: "#080808", primary: "#00F5A0" },
+    previewColors: { surface: "#121212", primary: "#00F5A0" },
   },
   {
     id: "blueprint",
