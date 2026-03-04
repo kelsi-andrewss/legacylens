@@ -26,7 +26,7 @@ export default function SearchBar({ onSearch, isLoading, externalQuery }: Search
 
   return (
     <form onSubmit={handleSubmit} className="w-full">
-      <div className="relative">
+      <div className="theme-search relative">
         <input
           type="text"
           value={query}
