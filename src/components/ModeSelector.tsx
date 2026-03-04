@@ -14,7 +14,9 @@ const MODES = [
 
 export default function ModeSelector({ mode, onModeChange }: ModeSelectorProps) {
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-col gap-2">
+      <span className="text-xs font-semibold uppercase tracking-wider text-ll-on-surface-muted">Analysis mode:</span>
+      <div className="flex flex-wrap gap-2">
       {MODES.map((m) => (
         <button
           key={m.id}
@@ -29,6 +31,7 @@ export default function ModeSelector({ mode, onModeChange }: ModeSelectorProps) 
           {m.label}
         </button>
       ))}
+      </div>
     </div>
   );
 }
