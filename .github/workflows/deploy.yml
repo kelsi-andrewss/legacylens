@@ -43,16 +43,33 @@ jobs:
 
           echo "project_id=$PROJECT_ID" >> $GITHUB_OUTPUT
 
+      - name: Set Vercel runtime env vars
+        run: |
+          PROJECT_ID="${{ steps.vercel-project.outputs.project_id }}"
+          TOKEN="${{ secrets.VERCEL_TOKEN }}"
+
+          set_env() {
+            local key="$1" value="$2"
+            # Remove existing, then create
+            curl -s -X DELETE "https://api.vercel.com/v9/projects/$PROJECT_ID/env?key=$key" \
+              -H "Authorization: Bearer $TOKEN" > /dev/null 2>&1
+            curl -s -X POST "https://api.vercel.com/v10/projects/$PROJECT_ID/env" \
+              -H "Authorization: Bearer $TOKEN" \
+              -H "Content-Type: application/json" \
+              -d "{\"key\":\"$key\",\"value\":\"$value\",\"type\":\"encrypted\",\"target\":[\"production\",\"preview\"]}" > /dev/null
+            echo "Set $key"
+          }
+
+          set_env "OPENAI_API_KEY" "${{ secrets.OPENAI_API_KEY }}"
+          set_env "PINECONE_API_KEY" "${{ secrets.PINECONE_API_KEY }}"
+          set_env "PINECONE_INDEX" "${{ secrets.PINECONE_INDEX }}"
+
       - name: Deploy to Vercel
         run: |
           ORG_ID=$(echo "${{ secrets.VERCEL_ORG_ID }}" | tr -d '[:space:]')
           PROJECT_ID="${{ steps.vercel-project.outputs.project_id }}"
 
-          DEPLOY_ARGS="--yes \
-            --env OPENAI_API_KEY=$OPENAI_API_KEY \
-            --env PINECONE_API_KEY=$PINECONE_API_KEY \
-            --env PINECONE_INDEX=$PINECONE_INDEX \
-            --token=${{ secrets.VERCEL_TOKEN }}"
+          DEPLOY_ARGS="--yes --token=${{ secrets.VERCEL_TOKEN }}"
 
           if [ "${{ github.ref }}" = "refs/heads/main" ]; then
             echo "Deploying to production..."
@@ -63,6 +80,3 @@ jobs:
           fi
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
-          PINECONE_INDEX: ${{ secrets.PINECONE_INDEX }}
