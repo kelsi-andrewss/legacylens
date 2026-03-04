@@ -1,5 +1,7 @@
+import type { QueryMode } from "@/lib/prompts";
+
 export interface TourStep {
-  mode: string;
+  mode: QueryMode;
   query: string;
   title: string;
   commentary: string;
