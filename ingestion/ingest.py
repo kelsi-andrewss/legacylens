@@ -1,5 +1,6 @@
 """Ingestion pipeline: parse LAPACK, embed, upsert to Pinecone."""
 
+import argparse
 import json
 import os
 import sys
@@ -104,6 +105,11 @@ def make_chunk_id(routine: FortranRoutine, chunk_idx: int = 0) -> str:
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Ingest LAPACK into Pinecone.")
+    parser.add_argument("--skip-sleep", action="store_true", help="Force skip all inter-batch sleeps regardless of cache hits.")
+    parser.add_argument("--dry-run", action="store_true", help="Parse and chunk without embedding or upserting.")
+    args = parser.parse_args()
+
     lapack_path = Path(__file__).parent.parent / "data" / "lapack"
     if not lapack_path.exists():
         print(f"LAPACK source not found at {lapack_path}")
@@ -146,6 +152,10 @@ def main():
             }
             chunks.append((chunk_id, part, metadata))
     print(f"Created {len(chunks)} chunks")
+
+    if args.dry_run:
+        print("Dry run complete. Skipping embedding and upsert.")
+        return
 
     # Embed
     print("Embedding chunks...")
@@ -190,8 +200,8 @@ def main():
             embeddings[chunk_id] = emb
             save_to_cache(chunk_id, emb)
 
-        # Rate limit courtesy
-        if batch_start + BATCH_SIZE < len(to_embed):
+        # Rate limit courtesy — skip if --skip-sleep passed (all-cache-hit runs never reach this loop)
+        if not args.skip_sleep and batch_start + BATCH_SIZE < len(to_embed):
             time.sleep(2)
 
     print(f"All {len(embeddings)} embeddings ready")
