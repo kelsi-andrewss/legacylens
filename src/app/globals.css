@@ -325,3 +325,17 @@ body {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* ── Joy: Header gradient accents ── */
+[data-theme="joy"] .theme-header {
+  background: var(--ll-surface-variant);
+  border-bottom: 3px solid;
+  border-image: linear-gradient(90deg, #00d4ff, #ff006e) 1;
+}
+
+[data-theme="joy"] .theme-header a.text-2xl {
+  background: linear-gradient(90deg, #00d4ff, #7b61ff, #ff006e);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
