@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
+import { motion, AnimatePresence, useSpring, useTransform } from "framer-motion";
 import AnswerStream from "@/components/AnswerStream";
 import CodeSnippet from "@/components/CodeSnippet";
 
@@ -29,6 +30,61 @@ const SAMPLE_NAMES = [
   "DGGEV", "DGEES", "DGEEV", "DSTEV", "DPBSV", "DGBSV", "DSPSV",
 ];
 
+const TOTAL_TICKS = 25;
+
+/**
+ * Drives the roulette name cycling via a spring-based index.
+ * The spring animates from 0 to TOTAL_TICKS, and at each integer
+ * we pick a sample name. The spring's natural deceleration creates
+ * the "slowing down" feel without manual interval cascading.
+ */
+function SpinningName({ spinning, finalName }: { spinning: boolean; finalName: string | null }) {
+  const springIndex = useSpring(0, {
+    stiffness: 30,
+    damping: 20,
+    mass: 1,
+  });
+  const nameIndex = useTransform(springIndex, (v) => {
+    const idx = Math.floor(v) % SAMPLE_NAMES.length;
+    return idx < 0 ? idx + SAMPLE_NAMES.length : idx;
+  });
+  const [display, setDisplay] = useState(SAMPLE_NAMES[0]);
+
+  useEffect(() => {
+    if (spinning) {
+      springIndex.jump(0);
+      springIndex.set(TOTAL_TICKS);
+    }
+  }, [spinning, springIndex]);
+
+  useEffect(() => {
+    const unsub = nameIndex.on("change", (v) => {
+      setDisplay(SAMPLE_NAMES[v]);
+    });
+    return unsub;
+  }, [nameIndex]);
+
+  // When finalName arrives and spinning stops, show it
+  const shown = !spinning && finalName ? finalName : display;
+
+  return (
+    <AnimatePresence mode="wait">
+      <motion.span
+        key={shown}
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 8 }}
+        transition={{ duration: 0.12 }}
+        className={`font-mono text-lg font-bold text-white ${
+          spinning ? "animate-pulse" : ""
+        }`}
+      >
+        {shown || "..."}
+      </motion.span>
+    </AnimatePresence>
+  );
+}
+
 export default function RoutineRoulette() {
   const [routine, setRoutine] = useState<{ id: string; metadata: ChunkData["metadata"] } | null>(null);
   const [answer, setAnswer] = useState("");
@@ -37,13 +93,11 @@ export default function RoutineRoulette() {
   const [isLoading, setIsLoading] = useState(false);
   const [displayName, setDisplayName] = useState("");
 
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
   // Clean up on unmount
   useEffect(() => {
     return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
       if (abortRef.current) abortRef.current.abort();
     };
   }, []);
@@ -113,27 +167,7 @@ export default function RoutineRoulette() {
     setAnswer("");
     setChunks([]);
     setIsLoading(false);
-
-    // Start cycling animation
-    let tick = 0;
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    intervalRef.current = setInterval(() => {
-      tick++;
-      setDisplayName(SAMPLE_NAMES[Math.floor(Math.random() * SAMPLE_NAMES.length)]);
-      // Slow down after ~15 ticks by clearing and restarting at slower rate
-      if (tick === 15) {
-        clearInterval(intervalRef.current!);
-        intervalRef.current = setInterval(() => {
-          setDisplayName(SAMPLE_NAMES[Math.floor(Math.random() * SAMPLE_NAMES.length)]);
-        }, 200);
-      }
-      if (tick === 20) {
-        clearInterval(intervalRef.current!);
-        intervalRef.current = setInterval(() => {
-          setDisplayName(SAMPLE_NAMES[Math.floor(Math.random() * SAMPLE_NAMES.length)]);
-        }, 350);
-      }
-    }, 80);
+    setDisplayName("");
 
     try {
       const response = await fetch("/api/games/random?count=1");
@@ -141,11 +175,8 @@ export default function RoutineRoulette() {
       const data = await response.json();
       const fetched = data.routines[0] as { id: string; metadata: ChunkData["metadata"] } | undefined;
 
-      // Wait for animation to finish (~2s total)
+      // Wait for spring animation to settle (~2s)
       await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      if (intervalRef.current) clearInterval(intervalRef.current);
-      intervalRef.current = null;
 
       if (!fetched) {
         setDisplayName("???");
@@ -162,8 +193,6 @@ export default function RoutineRoulette() {
       // Stream explanation
       streamExplanation(name);
     } catch (error) {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-      intervalRef.current = null;
       console.error("Spin error:", error);
       setDisplayName("???");
       setSpinning(false);
@@ -209,13 +238,7 @@ export default function RoutineRoulette() {
                   : "bg-ll-surface-tonal"
               }`}
             >
-              <span
-                className={`font-mono text-lg font-bold text-white ${
-                  spinning ? "animate-pulse" : ""
-                }`}
-              >
-                {displayName || "..."}
-              </span>
+              <SpinningName spinning={spinning} finalName={displayName || null} />
             </div>
           )}
         </div>
@@ -235,86 +258,95 @@ export default function RoutineRoulette() {
       </div>
 
       {/* Result display */}
-      {routine && (
-        <div className="space-y-6">
-          {/* Routine header */}
-          <div className="rounded-lg border border-ll-outline bg-ll-surface-variant p-6 shadow-sm">
-            <div className="flex flex-wrap items-center gap-3">
-              <h2 className="font-mono text-2xl font-bold text-ll-on-surface">
-                {routine.metadata.subroutine_name}
-              </h2>
-              <span className="rounded-full bg-ll-surface-tonal px-2.5 py-0.5 text-xs font-medium text-ll-on-surface-muted">
-                {routine.metadata.kind}
-              </span>
-              <span
-                className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                  routine.metadata.category === "BLAS"
-                    ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300"
-                    : "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
-                }`}
-              >
-                {routine.metadata.category}
-              </span>
-              {routine.metadata.data_type_prefix && (
+      <AnimatePresence mode="wait">
+        {routine && (
+          <motion.div
+            key={routine.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ type: "spring", duration: 0.5, bounce: 0.2 }}
+            className="space-y-6"
+          >
+            {/* Routine header */}
+            <div className="rounded-lg border border-ll-outline bg-ll-surface-variant p-6 shadow-sm">
+              <div className="flex flex-wrap items-center gap-3">
+                <h2 className="font-mono text-2xl font-bold text-ll-on-surface">
+                  {routine.metadata.subroutine_name}
+                </h2>
                 <span className="rounded-full bg-ll-surface-tonal px-2.5 py-0.5 text-xs font-medium text-ll-on-surface-muted">
-                  {routine.metadata.data_type_prefix}
+                  {routine.metadata.kind}
                 </span>
+                <span
+                  className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                    routine.metadata.category === "BLAS"
+                      ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300"
+                      : "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                  }`}
+                >
+                  {routine.metadata.category}
+                </span>
+                {routine.metadata.data_type_prefix && (
+                  <span className="rounded-full bg-ll-surface-tonal px-2.5 py-0.5 text-xs font-medium text-ll-on-surface-muted">
+                    {routine.metadata.data_type_prefix}
+                  </span>
+                )}
+              </div>
+              <p className="mt-2 text-sm text-ll-on-surface-muted">
+                {routine.metadata.file_path}:{routine.metadata.line_start}-{routine.metadata.line_end}
+              </p>
+              {routine.metadata.parameters && (
+                <p className="mt-1 text-sm text-ll-on-surface-muted">
+                  Parameters: <span className="font-mono text-xs">{routine.metadata.parameters}</span>
+                </p>
               )}
+              {routine.metadata.dependencies && (
+                <p className="mt-1 text-sm text-ll-on-surface-muted">
+                  Calls: <span className="font-mono text-xs">{routine.metadata.dependencies}</span>
+                </p>
+              )}
+
+              {/* Code preview */}
+              <div className="mt-4 max-h-48 overflow-auto rounded-md bg-zinc-950 p-4">
+                <pre className="text-xs leading-relaxed text-zinc-300">
+                  <code>{routine.metadata.text}</code>
+                </pre>
+              </div>
             </div>
-            <p className="mt-2 text-sm text-ll-on-surface-muted">
-              {routine.metadata.file_path}:{routine.metadata.line_start}-{routine.metadata.line_end}
-            </p>
-            {routine.metadata.parameters && (
-              <p className="mt-1 text-sm text-ll-on-surface-muted">
-                Parameters: <span className="font-mono text-xs">{routine.metadata.parameters}</span>
-              </p>
-            )}
-            {routine.metadata.dependencies && (
-              <p className="mt-1 text-sm text-ll-on-surface-muted">
-                Calls: <span className="font-mono text-xs">{routine.metadata.dependencies}</span>
-              </p>
-            )}
 
-            {/* Code preview */}
-            <div className="mt-4 max-h-48 overflow-auto rounded-md bg-zinc-950 p-4">
-              <pre className="text-xs leading-relaxed text-zinc-300">
-                <code>{routine.metadata.text}</code>
-              </pre>
-            </div>
-          </div>
-
-          {/* Streamed explanation */}
-          <div>
-            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-ll-on-surface-muted">
-              Explanation
-            </h3>
-            <AnswerStream content={answer} isStreaming={isLoading} />
-          </div>
-
-          {/* Code chunks from RAG */}
-          {chunks.length > 0 && (
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-ll-on-surface-muted">
-                Related Code ({chunks.length} chunks)
+            {/* Streamed explanation */}
+            <div>
+              <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-ll-on-surface-muted">
+                Explanation
               </h3>
-              {chunks.map((chunk) => (
-                <CodeSnippet key={chunk.id} chunk={chunk} />
-              ))}
+              <AnswerStream content={answer} isStreaming={isLoading} />
             </div>
-          )}
 
-          {/* Spin Again */}
-          <div className="flex justify-center">
-            <button
-              onClick={handleSpinAgain}
-              disabled={spinning}
-              className="rounded-full bg-ll-primary px-8 py-3 font-semibold text-ll-on-primary shadow transition-transform hover:scale-105 hover:bg-ll-primary-hover active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
-            >
-              Spin Again
-            </button>
-          </div>
-        </div>
-      )}
+            {/* Code chunks from RAG */}
+            {chunks.length > 0 && (
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-ll-on-surface-muted">
+                  Related Code ({chunks.length} chunks)
+                </h3>
+                {chunks.map((chunk) => (
+                  <CodeSnippet key={chunk.id} chunk={chunk} />
+                ))}
+              </div>
+            )}
+
+            {/* Spin Again */}
+            <div className="flex justify-center">
+              <button
+                onClick={handleSpinAgain}
+                disabled={spinning}
+                className="rounded-full bg-ll-primary px-8 py-3 font-semibold text-ll-on-primary shadow transition-transform hover:scale-105 hover:bg-ll-primary-hover active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
+              >
+                Spin Again
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

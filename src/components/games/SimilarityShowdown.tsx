@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { CheckCircle2, XCircle } from "lucide-react";
+import { motion, useSpring, useTransform, AnimatePresence } from "framer-motion";
 
 interface RoutineMetadata {
   subroutine_name: string;
@@ -58,6 +59,30 @@ function RoutineCard({ routine }: { routine: Routine }) {
   );
 }
 
+function AnimatedScore({ target }: { target: number }) {
+  const spring = useSpring(0, {
+    duration: ANIMATION_DURATION_MS,
+    bounce: 0,
+  });
+  const rounded = useTransform(spring, (v) => Math.round(v));
+  const [display, setDisplay] = useState(0);
+
+  useEffect(() => {
+    spring.set(target);
+  }, [spring, target]);
+
+  useEffect(() => {
+    const unsub = rounded.on("change", (v) => setDisplay(v));
+    return unsub;
+  }, [rounded]);
+
+  return (
+    <div className="text-4xl font-bold font-mono text-ll-on-surface">
+      {display}%
+    </div>
+  );
+}
+
 export default function SimilarityShowdown() {
   const [streak, setStreak] = useState(0);
   const [highScore, setHighScore] = useState(0);
@@ -65,13 +90,12 @@ export default function SimilarityShowdown() {
   const [routineB, setRoutineB] = useState<Routine | null>(null);
   const [revealed, setRevealed] = useState(false);
   const [actualScore, setActualScore] = useState<number | null>(null);
-  const [displayScore, setDisplayScore] = useState(0);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<"correct" | "wrong" | null>(null);
 
-  const animFrameRef = useRef<number>(0);
   const streakRef = useRef(streak);
   const highScoreRef = useRef(highScore);
+  const resultTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Keep refs in sync with state
   streakRef.current = streak;
@@ -86,11 +110,17 @@ export default function SimilarityShowdown() {
     }
   }, []);
 
+  // Cleanup result timer on unmount
+  useEffect(() => {
+    return () => {
+      if (resultTimerRef.current) clearTimeout(resultTimerRef.current);
+    };
+  }, []);
+
   const fetchPair = useCallback(async () => {
     setLoading(true);
     setRevealed(false);
     setActualScore(null);
-    setDisplayScore(0);
     setResult(null);
 
     try {
@@ -109,28 +139,6 @@ export default function SimilarityShowdown() {
   useEffect(() => {
     fetchPair();
   }, [fetchPair]);
-
-  // Cleanup animation frame on unmount
-  useEffect(() => {
-    return () => {
-      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
-    };
-  }, []);
-
-  const animateScore = useCallback((target: number) => {
-    const start = performance.now();
-    const animate = (now: number) => {
-      const elapsed = now - start;
-      const progress = Math.min(elapsed / ANIMATION_DURATION_MS, 1);
-      // Ease-out cubic
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setDisplayScore(Math.round(eased * target));
-      if (progress < 1) {
-        animFrameRef.current = requestAnimationFrame(animate);
-      }
-    };
-    animFrameRef.current = requestAnimationFrame(animate);
-  }, []);
 
   const handleGuess = useCallback(
     async (guessHigher: boolean) => {
@@ -152,13 +160,12 @@ export default function SimilarityShowdown() {
 
         setActualScore(pct);
         setRevealed(true);
-        animateScore(pct);
 
         const isHigher = pct >= THRESHOLD;
         const correct = guessHigher === isHigher;
 
-        // Delay result display until after animation
-        setTimeout(() => {
+        // Delay result display until after spring animation completes
+        resultTimerRef.current = setTimeout(() => {
           if (correct) {
             const newStreak = currentStreak + 1;
             setStreak(newStreak);
@@ -176,10 +183,8 @@ export default function SimilarityShowdown() {
         setLoading(false);
       }
     },
-    [routineA, routineB, revealed, loading, animateScore]
+    [routineA, routineB, revealed, loading]
   );
-
-  const isGameOver = result === "wrong";
 
   return (
     <div className="space-y-6">
@@ -241,42 +246,71 @@ export default function SimilarityShowdown() {
       )}
 
       {/* Animated score reveal */}
-      {revealed && (
-        <div className="flex flex-col items-center gap-3">
-          <div className="text-4xl font-bold font-mono text-ll-on-surface">
-            {displayScore}%
-          </div>
+      <AnimatePresence mode="wait">
+        {revealed && (
+          <motion.div
+            key="score-reveal"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            transition={{ type: "spring", duration: 0.5, bounce: 0.3 }}
+            className="flex flex-col items-center gap-3"
+          >
+            <AnimatedScore target={actualScore ?? 0} />
 
-          {result === "correct" && (
-            <div className="flex items-center gap-2 text-lg font-semibold text-green-600 dark:text-green-400">
-              <CheckCircle2 className="h-5 w-5" />
-              Correct!
-            </div>
-          )}
+            <AnimatePresence>
+              {result === "correct" && (
+                <motion.div
+                  key="correct"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ type: "spring", duration: 0.4 }}
+                  className="flex items-center gap-2 text-lg font-semibold text-green-600 dark:text-green-400"
+                >
+                  <CheckCircle2 className="h-5 w-5" />
+                  Correct!
+                </motion.div>
+              )}
 
-          {result === "wrong" && (
-            <div className="space-y-1 text-center">
-              <div className="flex items-center justify-center gap-2 text-lg font-semibold text-red-600 dark:text-red-400">
-                <XCircle className="h-5 w-5" />
-                Wrong!
-              </div>
-              <div className="text-sm text-ll-on-surface-muted">
-                Game Over! Streak: {streakRef.current} | High Score:{" "}
-                {highScoreRef.current}
-              </div>
-            </div>
-          )}
+              {result === "wrong" && (
+                <motion.div
+                  key="wrong"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ type: "spring", duration: 0.4 }}
+                  className="space-y-1 text-center"
+                >
+                  <div className="flex items-center justify-center gap-2 text-lg font-semibold text-red-600 dark:text-red-400">
+                    <XCircle className="h-5 w-5" />
+                    Wrong!
+                  </div>
+                  <div className="text-sm text-ll-on-surface-muted">
+                    Game Over! Streak: {streakRef.current} | High Score:{" "}
+                    {highScoreRef.current}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-          {result && (
-            <button
-              onClick={fetchPair}
-              className="mt-2 rounded-lg bg-ll-primary px-6 py-2.5 text-sm font-semibold text-ll-on-primary shadow-sm hover:bg-ll-primary-hover transition-colors"
-            >
-              Next Round
-            </button>
-          )}
-        </div>
-      )}
+            {result && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 }}
+              >
+                <button
+                  onClick={fetchPair}
+                  className="mt-2 rounded-lg bg-ll-primary px-6 py-2.5 text-sm font-semibold text-ll-on-primary shadow-sm hover:bg-ll-primary-hover transition-colors"
+                >
+                  Next Round
+                </button>
+              </motion.div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
