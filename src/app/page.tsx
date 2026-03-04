@@ -7,6 +7,7 @@ import AnswerStream from "@/components/AnswerStream";
 import CodeSnippet, { type ChunkData } from "@/components/CodeSnippet";
 import Pokedex, { saveRoutineMeta } from "@/components/Pokedex";
 import { markDiscovered, isDiscovered, addXP, getStats, markAllAsSeen, hasUnseenDiscoveries } from "@/lib/pokedex";
+import { type Lens } from "@/lib/prompts";
 import Scratchpad, { type PinnedItem } from "@/components/Scratchpad";
 import ChallengeToast from "@/components/ChallengeToast";
 import { shouldTriggerChallenge, generateChallenge, type Challenge } from "@/lib/challenges";
@@ -26,6 +27,8 @@ function loadPinnedItems(): PinnedItem[] {
 
 export default function Home() {
   const [mode, setMode] = useState("explain");
+  const [lens, setLens] = useState<Lens | undefined>(undefined);
+  const lensRef = useRef<Lens | undefined>(undefined);
   const [answer, setAnswer] = useState("");
   const [chunks, setChunks] = useState<ChunkData[]>([]);
   const [lastQuery, setLastQuery] = useState("");
@@ -40,6 +43,11 @@ export default function Home() {
   const [activeRoutine, setActiveRoutine] = useState<string | null>(null);
   const [discoveredCount, setDiscoveredCount] = useState(() => getStats().discovered);
   const [hasUnseen, setHasUnseen] = useState(() => hasUnseenDiscoveries());
+
+  const handleLensChange = useCallback((newLens: Lens | undefined) => {
+    setLens(newLens);
+    lensRef.current = newLens;
+  }, []);
 
   const handleRoutineHover = useCallback((name: string | null) => {
     setActiveRoutine(name);
@@ -119,7 +127,7 @@ export default function Home() {
         const response = await fetch("/api/query", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query, mode: activeMode }),
+          body: JSON.stringify({ query, mode: activeMode, lens: lensRef.current }),
           signal: controller.signal,
         });
 
@@ -332,7 +340,7 @@ export default function Home() {
               externalQuery={exampleQuery}
             />
             <SuggestedSearches onSelect={handleSuggestedSelect} />
-            <ModeSelector mode={mode} onModeChange={handleModeChange} />
+            <ModeSelector mode={mode} onModeChange={handleModeChange} lens={lens} onLensChange={handleLensChange} />
 
             {(answer || isLoading) && (
               <AnswerStream
