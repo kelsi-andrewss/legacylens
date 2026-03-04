@@ -29,22 +29,33 @@ function readStoredTheme(): ThemeId {
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<ThemeId>(readStoredTheme);
-  const [systemIsDark, setSystemIsDark] = useState(() =>
-    typeof window !== "undefined" ? window.matchMedia(MEDIA_QUERY).matches : false
-  );
+  const [mounted, setMounted] = useState(false);
+  const [theme, setThemeState] = useState<ThemeId>(DEFAULT_THEME);
+  const [systemIsDark, setSystemIsDark] = useState(false);
 
-  const resolvedTheme = theme === "system" ? resolveSystemTheme(systemIsDark) : theme;
+  const resolvedTheme = mounted
+    ? theme === "system" ? resolveSystemTheme(systemIsDark) : theme
+    : DEFAULT_THEME;
 
   const setTheme = useCallback((t: ThemeId) => {
     setThemeState(t);
     localStorage.setItem(THEME_STORAGE_KEY, t);
   }, []);
 
+  // Hydration gate: read stored theme and system preference after mount
   useEffect(() => {
-    document.documentElement.dataset.theme = resolvedTheme;
-  }, [resolvedTheme]);
+    setThemeState(readStoredTheme());
+    setSystemIsDark(window.matchMedia(MEDIA_QUERY).matches);
+    setMounted(true);
+  }, []);
 
+  // Apply theme to document only after mount
+  useEffect(() => {
+    if (!mounted) return;
+    document.documentElement.dataset.theme = resolvedTheme;
+  }, [mounted, resolvedTheme]);
+
+  // Listen for system color scheme changes
   useEffect(() => {
     const mql = window.matchMedia(MEDIA_QUERY);
     const handler = (e: MediaQueryListEvent) => setSystemIsDark(e.matches);
