@@ -2,11 +2,12 @@ import type { QueryMode } from "@/lib/prompts";
 
 export interface TourStep {
   mode: QueryMode;
-  query: string | null; // null = commentary-only, keep previous result visible
+  query: string | null;
   title: string;
   commentary: string;
   highlight?: "search" | "mode" | "chunks" | "sidebar" | "answer";
   filters?: { category?: string; dataType?: string };
+  waitFor?: "search" | "mode" | "filter";
 }
 
 export const TOUR_STEPS: TourStep[] = [
@@ -15,9 +16,10 @@ export const TOUR_STEPS: TourStep[] = [
     query: "What does DGESV do?",
     title: "Ask in Plain English",
     commentary:
-      "DGESV is LAPACK's core linear solver. Ask any question in natural language — LegacyLens searches 7,759 code vectors across 2,329 Fortran files and returns the most relevant routines.",
+      "The search bar is pre-filled — press Search to run it, or edit the question first. This searches 7,759 Fortran code vectors across 2,329 files.",
     highlight: "search",
     filters: {},
+    waitFor: "search",
   },
   {
     mode: "explain",
@@ -30,11 +32,12 @@ export const TOUR_STEPS: TourStep[] = [
   {
     mode: "dependencies",
     query: "What does DGETRF call?",
-    title: "Dependency Mapping",
+    title: "Switch Modes",
     commentary:
-      "Switch to Dependencies mode — the same natural-language question now maps the call graph. DGETRF (LU factorization) chains into DTRSM, DLASWP, and DGEMM. Every subroutine, every edge.",
+      "Each mode asks a different question about the same code. Click Dependencies above to map what DGETRF calls.",
     highlight: "mode",
     filters: {},
+    waitFor: "mode",
   },
   {
     mode: "docs",
@@ -59,9 +62,10 @@ export const TOUR_STEPS: TourStep[] = [
     query: null,
     title: "Filter by Library",
     commentary:
-      "The sidebar narrows results by library (LAPACK or BLAS) and numeric precision (single, double, complex, double complex). BLAS is now selected — it applies to the next query. Press Next when ready.",
+      "The sidebar narrows results by library and precision. Click BLAS to filter — the next query will only return BLAS routines.",
     highlight: "sidebar",
     filters: { category: "BLAS" },
+    waitFor: "filter",
   },
   {
     mode: "explain",
@@ -105,7 +109,14 @@ export default function TutorialBanner({ step, onNext, onExit }: TutorialBannerP
               [{step + 1}/{total}]
             </span>
           </div>
-          <p className="text-sm text-blue-800 dark:text-blue-200">{current.commentary}</p>
+          <div className="flex items-center gap-2">
+            {current.waitFor && (
+              <span className="shrink-0 rounded-full bg-blue-600 px-2 py-0.5 text-xs font-semibold text-white dark:bg-blue-500">
+                Your turn
+              </span>
+            )}
+            <p className="text-sm text-blue-800 dark:text-blue-200">{current.commentary}</p>
+          </div>
         </div>
         <div className="shrink-0 flex items-center gap-2">
           {isLast ? (
@@ -120,7 +131,7 @@ export default function TutorialBanner({ step, onNext, onExit }: TutorialBannerP
               onClick={onNext}
               className="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
             >
-              Next →
+              {current.waitFor ? "Skip →" : "Next →"}
             </button>
           )}
           <button

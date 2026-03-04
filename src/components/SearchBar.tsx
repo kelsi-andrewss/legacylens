@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, FormEvent } from "react";
+import { useState, FormEvent, useEffect } from "react";
 
 interface SearchBarProps {
   onSearch: (query: string) => void;
@@ -12,7 +12,9 @@ export default function SearchBar({ onSearch, isLoading, externalQuery }: Search
   const [query, setQuery] = useState("");
 
   useEffect(() => {
-    if (externalQuery !== undefined) setQuery(externalQuery);
+    if (externalQuery !== undefined) {
+      setQuery(externalQuery);
+    }
   }, [externalQuery]);
 
   const handleSubmit = (e: FormEvent) => {

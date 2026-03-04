@@ -94,16 +94,35 @@ export default function Home() {
     [mode, categoryFilter, typeFilter]
   );
 
-  // Phase 1 effect: fires when tutorialStep changes — applies filters, sets mode, clears results, queues query
+  // Phase 1 effect: fires when tutorialStep changes
   useEffect(() => {
     if (tutorialStep === null) return;
     const step = TOUR_STEPS[tutorialStep];
-    if (step.filters?.category !== undefined) setCategoryFilter(step.filters.category);
-    if (step.filters?.dataType !== undefined) setTypeFilter(step.filters.dataType);
-    if (step.query === null) return; // commentary-only: keep existing results visible
-    setMode(step.mode);
+
+    // Apply filters — except filter-action steps (user must click)
+    if (step.waitFor !== "filter") {
+      if (step.filters?.category !== undefined) setCategoryFilter(step.filters.category);
+      if (step.filters?.dataType !== undefined) setTypeFilter(step.filters.dataType);
+    }
+
+    if (step.query === null) return; // commentary-only: keep existing results
+
     setAnswer("");
     setChunks([]);
+
+    if (step.waitFor === "search") {
+      // Pre-fill only — user presses Search manually
+      setMode(step.mode);
+      return;
+    }
+
+    if (step.waitFor === "mode") {
+      // Queue query but don't set mode — Phase 2 fires when user clicks the mode pill
+      setTutorialPendingQuery(step.query);
+      return;
+    }
+
+    setMode(step.mode);
     setTutorialPendingQuery(step.query);
   }, [tutorialStep]);
 
@@ -118,10 +137,11 @@ export default function Home() {
   }, [mode, tutorialPendingQuery, tutorialStep, handleSearch]);
 
   // Auto-advance effect: fires when loading completes with a result during tour
-  // Null-query steps are skipped — "Next →" is the only way to advance them
+  // Null-query steps and waitFor steps are excluded from auto-advance
   useEffect(() => {
     if (tutorialStep === null || isLoading || answer.length === 0) return;
     if (TOUR_STEPS[tutorialStep].query === null) return;
+    if (TOUR_STEPS[tutorialStep].waitFor === "search") return; // auto-advance after manual search is fine, let it through
     const timer = setTimeout(() => {
       if (tutorialStep < TOUR_STEPS.length - 1) {
         setTutorialStep((t) => (t !== null ? t + 1 : null));
@@ -132,9 +152,24 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, [isLoading, answer, tutorialStep]);
 
+  // Filter-action advance: fires when user clicks the expected filter during a waitFor:"filter" step
+  useEffect(() => {
+    if (tutorialStep === null) return;
+    const step = TOUR_STEPS[tutorialStep];
+    if (step.waitFor !== "filter") return;
+    if (step.filters?.category === undefined) return;
+    if (categoryFilter !== step.filters.category) return;
+    setTutorialStep((t) => (t !== null && t < TOUR_STEPS.length - 1 ? t + 1 : null));
+  }, [categoryFilter, tutorialStep]);
+
   const tourHighlight = tutorialStep !== null ? TOUR_STEPS[tutorialStep].highlight : undefined;
-  const highlightClass = (region: string) =>
-    tourHighlight === region ? "ring-2 ring-blue-400 ring-offset-2 rounded-lg transition-all duration-300" : "";
+  const highlightClass = (region: string) => {
+    if (tourHighlight !== region) return "";
+    const isAction = tutorialStep !== null && !!TOUR_STEPS[tutorialStep].waitFor;
+    return isAction
+      ? "ring-2 ring-blue-500 ring-offset-2 rounded-lg animate-pulse"
+      : "ring-2 ring-blue-400 ring-offset-2 rounded-lg";
+  };
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
