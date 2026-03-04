@@ -1,26 +1,119 @@
 @import "tailwindcss";
 
+/* ── SSR fallback: kinetic-obsidian defaults ── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --ll-surface: #080808;
+  --ll-surface-variant: #111111;
+  --ll-surface-tonal: #1A1A1A;
+  --ll-primary: #00F5A0;
+  --ll-secondary: #00D4FF;
+  --ll-on-surface: #F0F0F0;
+  --ll-on-surface-muted: #888888;
+  --ll-on-primary: #003D28;
+  --ll-on-primary-container: #00F5A0;
+  --ll-primary-container: #003D28;
+  --ll-outline: #2A2A2A;
+  --ll-radius-sm: 12px;
+  --ll-radius-md: 16px;
+  --ll-radius-lg: 24px;
+  --ll-font-display: var(--font-space-grotesk);
+  --ll-font-body: var(--font-space-grotesk);
+  --ll-font-mono: var(--font-geist-mono);
 }
 
+/* ── Punch Card ── */
+[data-theme="punch-card"] {
+  --ll-surface: #F5F0E8;
+  --ll-surface-variant: #EDE8DC;
+  --ll-surface-tonal: #E5DFD0;
+  --ll-primary: #C4541A;
+  --ll-secondary: #6B7A2E;
+  --ll-on-surface: #1A1208;
+  --ll-on-surface-muted: #6B5D45;
+  --ll-on-primary: #FFFFFF;
+  --ll-on-primary-container: #7A3410;
+  --ll-primary-container: #FDDCC8;
+  --ll-outline: #C4B89A;
+  --ll-radius-sm: 2px;
+  --ll-radius-md: 4px;
+  --ll-radius-lg: 4px;
+  --ll-font-display: var(--font-ibm-plex-mono);
+  --ll-font-body: var(--font-ibm-plex-sans);
+  --ll-font-mono: var(--font-geist-mono);
+}
+
+/* ── Kinetic Obsidian ── */
+[data-theme="kinetic-obsidian"] {
+  --ll-surface: #080808;
+  --ll-surface-variant: #111111;
+  --ll-surface-tonal: #1A1A1A;
+  --ll-primary: #00F5A0;
+  --ll-secondary: #00D4FF;
+  --ll-on-surface: #F0F0F0;
+  --ll-on-surface-muted: #888888;
+  --ll-on-primary: #003D28;
+  --ll-on-primary-container: #00F5A0;
+  --ll-primary-container: #003D28;
+  --ll-outline: #2A2A2A;
+  --ll-radius-sm: 12px;
+  --ll-radius-md: 16px;
+  --ll-radius-lg: 24px;
+  --ll-font-display: var(--font-space-grotesk);
+  --ll-font-body: var(--font-space-grotesk);
+  --ll-font-mono: var(--font-geist-mono);
+}
+
+/* ── Blueprint ── */
+[data-theme="blueprint"] {
+  --ll-surface: #F4F6FA;
+  --ll-surface-variant: #FFFFFF;
+  --ll-surface-tonal: #E8ECF4;
+  --ll-primary: #1B3A6B;
+  --ll-secondary: #4A6FA5;
+  --ll-on-surface: #0F1929;
+  --ll-on-surface-muted: #5A6B82;
+  --ll-on-primary: #FFFFFF;
+  --ll-on-primary-container: #1B3A6B;
+  --ll-primary-container: #D4E0F0;
+  --ll-outline: #C5D0E0;
+  --ll-radius-sm: 4px;
+  --ll-radius-md: 8px;
+  --ll-radius-lg: 12px;
+  --ll-font-display: var(--font-archivo-narrow);
+  --ll-font-body: var(--font-archivo-narrow);
+  --ll-font-mono: var(--font-geist-mono);
+}
+
+/* ── Tailwind v4 bridge ── */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-ll-surface: var(--ll-surface);
+  --color-ll-surface-variant: var(--ll-surface-variant);
+  --color-ll-surface-tonal: var(--ll-surface-tonal);
+  --color-ll-primary: var(--ll-primary);
+  --color-ll-secondary: var(--ll-secondary);
+  --color-ll-on-surface: var(--ll-on-surface);
+  --color-ll-on-surface-muted: var(--ll-on-surface-muted);
+  --color-ll-on-primary: var(--ll-on-primary);
+  --color-ll-on-primary-container: var(--ll-on-primary-container);
+  --color-ll-primary-container: var(--ll-primary-container);
+  --color-ll-outline: var(--ll-outline);
+  --radius-ll-sm: var(--ll-radius-sm);
+  --radius-ll-md: var(--ll-radius-md);
+  --radius-ll-lg: var(--ll-radius-lg);
+  --font-ll-display: var(--ll-font-display);
+  --font-ll-body: var(--ll-font-body);
+  --font-ll-mono: var(--ll-font-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ── Global theme transition ── */
+*,
+*::before,
+*::after {
+  transition: background-color 200ms, border-color 200ms, color 200ms;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--ll-surface);
+  color: var(--ll-on-surface);
+  font-family: var(--ll-font-body), sans-serif;
 }
