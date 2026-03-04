@@ -98,14 +98,10 @@ export default function Home() {
       setChunks([]);
 
       try {
-        const filters: Record<string, string> = {};
-        if (categoryFilter) filters.category = categoryFilter;
-        if (typeFilter) filters.data_type_prefix = typeFilter;
-
         const response = await fetch("/api/query", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query, mode: activeMode, filters: Object.keys(filters).length > 0 ? filters : undefined, theme: resolvedThemeRef.current }),
+          body: JSON.stringify({ query, mode: activeMode, theme: resolvedThemeRef.current }),
         });
 
         if (!response.ok) {
@@ -169,8 +165,16 @@ export default function Home() {
         setIsLoading(false);
       }
     },
-    [mode, categoryFilter, typeFilter]
+    [mode]
   );
+
+  const filteredChunks = chunks.filter((chunk) => {
+    if (categoryFilter && chunk.metadata.category !== categoryFilter) return false;
+    if (typeFilter && chunk.metadata.data_type_prefix !== typeFilter) return false;
+    return true;
+  });
+
+  const filtersActive = categoryFilter !== "" || typeFilter !== "";
 
   const runExample = (query: string, exampleMode: string) => {
     setMode(exampleMode);
@@ -265,9 +269,9 @@ export default function Home() {
             {chunks.length > 0 && (
               <div className="space-y-4">
                 <h2 className="text-lg font-semibold text-ll-on-surface">
-                  Retrieved Code ({chunks.length} chunks)
+                  Retrieved Code ({filtersActive ? `${filteredChunks.length} of ${chunks.length} chunks` : `${chunks.length} chunks`})
                 </h2>
-                {chunks.map((chunk) => (
+                {filteredChunks.map((chunk) => (
                   <CodeSnippet
                     key={chunk.id}
                     chunk={chunk}
