@@ -307,8 +307,8 @@ export default function RoutineRoulette() {
               )}
 
               {/* Code preview */}
-              <div className="mt-4 max-h-48 overflow-auto rounded-md bg-zinc-950 p-4">
-                <pre className="text-xs leading-relaxed text-zinc-300">
+              <div className="mt-4 max-h-48 overflow-y-auto overflow-x-auto rounded-lg border border-ll-outline bg-zinc-950">
+                <pre className="min-w-full break-words p-4 text-xs leading-relaxed text-zinc-300">
                   <code>{routine.metadata.text}</code>
                 </pre>
               </div>

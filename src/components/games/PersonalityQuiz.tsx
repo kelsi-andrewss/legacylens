@@ -187,16 +187,16 @@ export default function PersonalityQuiz() {
   if (!showResult) {
     const question = QUIZ_QUESTIONS[currentQuestion];
     return (
-      <div className="mx-auto max-w-2xl">
+      <div className="mx-auto w-full max-w-2xl px-2 sm:px-0">
         <div className="mb-6 flex items-center justify-between">
           <span className="text-sm font-medium text-ll-on-surface-muted">
             Question {currentQuestion + 1} of {QUIZ_QUESTIONS.length}
           </span>
-          <div className="flex gap-1.5">
+          <div className="flex gap-1 sm:gap-1.5">
             {QUIZ_QUESTIONS.map((_, i) => (
               <div
                 key={i}
-                className={`h-2 w-8 rounded-full transition-colors duration-300 ${
+                className={`h-2 w-5 sm:w-8 rounded-full transition-colors duration-300 ${
                   i < answers.length
                     ? "bg-ll-primary"
                     : i === currentQuestion
@@ -233,7 +233,7 @@ export default function PersonalityQuiz() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="mx-auto w-full max-w-3xl space-y-6 px-2 sm:px-0">
       {/* Result card */}
       <div className="rounded-xl border border-ll-outline bg-gradient-to-br from-ll-primary-container to-ll-surface-variant p-8 shadow-sm" aria-live="polite">
         <div className="mb-1 text-sm font-medium uppercase tracking-wider text-ll-primary">

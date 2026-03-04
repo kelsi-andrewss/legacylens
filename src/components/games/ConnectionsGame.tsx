@@ -197,7 +197,7 @@ export default function ConnectionsGame() {
   );
 
   return (
-    <div className="flex flex-col items-center gap-4 w-full max-w-lg mx-auto">
+    <div className="flex flex-col items-center gap-4 w-full max-w-lg mx-auto px-2 sm:px-0">
       <style jsx>{`
         @keyframes shake {
           0% {
@@ -274,7 +274,7 @@ export default function ConnectionsGame() {
                 disabled={gameOver}
                 aria-label={`${isSelected ? "Deselect" : "Select"} routine ${name}`}
                 aria-pressed={isSelected}
-                className={`rounded-md px-2 py-3 text-xs font-mono font-bold transition-colors
+                className={`rounded-md px-1.5 py-3 text-[0.65rem] sm:px-2 sm:text-xs font-mono font-bold transition-colors truncate min-w-0
                   ${
                     isSelected
                       ? "ring-2 ring-ll-primary bg-ll-primary-container text-ll-on-primary-container"

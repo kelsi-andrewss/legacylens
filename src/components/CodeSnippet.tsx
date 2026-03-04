@@ -118,13 +118,15 @@ export default function CodeSnippet({ chunk, onPin, isPinned }: CodeSnippetProps
         </div>
       )}
 
-      <div className="max-h-80 overflow-auto">
+      <div className="max-h-96 overflow-y-auto overflow-x-auto">
         <SyntaxHighlighter
           language="fortran"
           style={atomOneDark}
           showLineNumbers
           startingLineNumber={m.line_start}
           customStyle={{ margin: 0, borderRadius: 0, fontSize: "0.8rem" }}
+          wrapLongLines={false}
+          codeTagProps={{ className: "min-w-full break-words" }}
         >
           {m.text}
         </SyntaxHighlighter>
