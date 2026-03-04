@@ -23,7 +23,7 @@ EMBEDDING_MODEL = "text-embedding-3-small"
 EMBEDDING_DIM = 1536
 MAX_TOKENS = 1500
 OVERLAP_RATIO = 0.1
-BATCH_SIZE = 100
+BATCH_SIZE = 10
 
 CACHE_DIR = Path(__file__).parent / "cache"
 CACHE_DIR.mkdir(exist_ok=True)
@@ -179,7 +179,7 @@ def main():
 
         # Rate limit courtesy
         if batch_start + BATCH_SIZE < len(to_embed):
-            time.sleep(0.5)
+            time.sleep(2)
 
     print(f"All {len(embeddings)} embeddings ready")
 
