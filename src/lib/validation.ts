@@ -13,7 +13,10 @@ const VALID_MODES: readonly string[] = [
  * Uses a simple regex — sufficient for preventing reflected XSS in plain-text fields.
  */
 export function sanitizeString(input: string): string {
-  return input.replace(/<[^>]*>/g, "").trim();
+  return input
+    .replace(/<[^>]*>/g, "")
+    .replace(/[\u200e\u200f\u202a-\u202e\u2066-\u2069\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/g, "")
+    .trim();
 }
 
 export function validateQuery(query: unknown): {

@@ -91,7 +91,8 @@ export function buildUserMessage(
       if (m.error_codes) context += `  Error Codes: ${m.error_codes}\n`;
     }
     context += `Relevance: ${((chunk.score || 0) * 100).toFixed(1)}%\n`;
-    context += "```fortran\n" + m.text + "\n```\n\n";
+    const safeText = String(m.text ?? "").replace(/`{3,}/g, (match) => match.split("").join("\u200b"));
+    context += "```fortran\n" + safeText + "\n```\n\n";
   }
   return `${context}\n## User Query\n${query}`;
 }

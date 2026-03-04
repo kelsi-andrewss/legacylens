@@ -2,7 +2,7 @@ import { NextRequest, after } from "next/server";
 import { embedQuery, getOpenAI } from "@/lib/openai";
 import { queryPinecone, fetchRoutinesByNames, upsertSyntheticChunk } from "@/lib/pinecone";
 import { QueryMode, getSystemPrompt, buildUserMessage } from "@/lib/prompts";
-import { CHAT_MODEL, TEMPERATURE, MAX_TOKENS, DEFAULT_TOP_K, GRAPH_EXPANSION_MAX_CHUNKS } from "@/lib/config";
+import { CHAT_MODEL, TEMPERATURE, MAX_TOKENS, DEFAULT_TOP_K, GRAPH_EXPANSION_MAX_CHUNKS, MIN_SCORE_THRESHOLD } from "@/lib/config";
 import { validateQuery, validateMode, sanitizeString } from "@/lib/validation";
 
 export const runtime = "nodejs";
@@ -29,6 +29,7 @@ export async function POST(req: NextRequest) {
     }
 
     const sanitizedQuery = sanitizeString(query);
+    const sanitizedTheme = theme ? sanitizeString(theme) : undefined;
 
     // Build Pinecone filter
     const pineconeFilter: Record<string, unknown> = {};
@@ -50,10 +51,29 @@ export async function POST(req: NextRequest) {
       { includeSynthetic: mode === "explain" }
     );
 
+    const filteredMatches = matches.filter(m => (m.score ?? 0) >= MIN_SCORE_THRESHOLD);
+    const filtersApplied = Object.keys(pineconeFilter).length > 0;
+
+    // Guard: no results from Pinecone — skip LLM call entirely
+    if (filteredMatches.length === 0) {
+      if (filtersApplied) {
+        // Re-query without filters to determine if results exist at all
+        const unfilteredMatches = await queryPinecone(embedding, DEFAULT_TOP_K);
+        const unfilteredFiltered = unfilteredMatches.filter(m => (m.score ?? 0) >= MIN_SCORE_THRESHOLD);
+        if (unfilteredFiltered.length > 0) {
+          return Response.json(
+            { error: "No results for the selected filters — try removing them to see all matches." },
+            { status: 404 }
+          );
+        }
+      }
+      return Response.json({ error: "No matching routines found for your query." }, { status: 404 });
+    }
+
     // Graph expansion: fetch direct dependencies of initial results (depth=1)
-    const seen = new Set(matches.map((m) => (m.metadata?.subroutine_name as string)));
+    const seen = new Set(filteredMatches.map((m) => (m.metadata?.subroutine_name as string)));
     const depsToFetch: string[] = [];
-    for (const m of matches) {
+    for (const m of filteredMatches) {
       const depStr = (m.metadata?.dependencies as string) || '';
       const deps = depStr.split(', ').filter(Boolean);
       for (const dep of deps) {
@@ -64,11 +84,11 @@ export async function POST(req: NextRequest) {
       }
     }
     const expanded = await fetchRoutinesByNames([...new Set(depsToFetch)]);
-    console.log(`[graph-expansion] initial=${matches.length} deps_to_fetch=${depsToFetch.length} expanded=${expanded.length}`);
-    const allMatches = [...matches, ...expanded].slice(0, GRAPH_EXPANSION_MAX_CHUNKS);
+    console.log(`[graph-expansion] initial=${filteredMatches.length} deps_to_fetch=${depsToFetch.length} expanded=${expanded.length}`);
+    const allMatches = [...filteredMatches, ...expanded].slice(0, GRAPH_EXPANSION_MAX_CHUNKS);
 
     // Build context
-    const systemPrompt = getSystemPrompt(mode as QueryMode, theme);
+    const systemPrompt = getSystemPrompt(mode as QueryMode, sanitizedTheme);
     const userMessage = buildUserMessage(sanitizedQuery, allMatches as { metadata: Record<string, unknown>; score?: number }[]);
 
     // Stream response from GPT-4o-mini
@@ -88,39 +108,50 @@ export async function POST(req: NextRequest) {
     const fullResponse: string[] = [];
     const readable = new ReadableStream({
       async start(controller) {
-        // Send chunks metadata first
-        const chunksData = allMatches.map((m) => ({
-          id: m.id,
-          score: m.score,
-          metadata: m.metadata,
-        }));
-        controller.enqueue(
-          encoder.encode(`data: ${JSON.stringify({ type: "chunks", data: chunksData })}\n\n`)
-        );
+        try {
+          // Send chunks metadata first
+          const chunksData = allMatches.map((m) => ({
+            id: m.id,
+            score: m.score,
+            metadata: m.metadata,
+          }));
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify({ type: "chunks", data: chunksData })}\n\n`)
+          );
 
-        // Stream LLM response, buffering for post-response synthetic upsert
-        for await (const chunk of stream) {
-          const content = chunk.choices[0]?.delta?.content;
-          if (content) {
-            fullResponse.push(content);
-            controller.enqueue(
-              encoder.encode(`data: ${JSON.stringify({ type: "text", data: content })}\n\n`)
+          // Stream LLM response, buffering for post-response synthetic upsert
+          for await (const chunk of stream) {
+            const content = chunk.choices[0]?.delta?.content;
+            if (content) {
+              fullResponse.push(content);
+              controller.enqueue(
+                encoder.encode(`data: ${JSON.stringify({ type: "text", data: content })}\n\n`)
+              );
+            }
+          }
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "done" })}\n\n`));
+          controller.close();
+        } catch (error) {
+          const message = error instanceof Error ? error.message : "Stream error";
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify({ type: "error", data: message })}\n\n`)
+          );
+          controller.close();
+        } finally {
+          // After the response is sent, cache the LLM answer back to Pinecone as a synthetic chunk.
+          // Only upsert if the stream produced content — skip on error before any LLM output.
+          // `after()` runs after the response is flushed but before the serverless function exits.
+          if (fullResponse.length > 0) {
+            const routineNames = allMatches
+              .map((m) => m.metadata?.subroutine_name as string)
+              .filter(Boolean);
+            after(
+              upsertSyntheticChunk(sanitizedQuery, fullResponse.join(""), routineNames).catch(
+                console.error
+              )
             );
           }
         }
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "done" })}\n\n`));
-        controller.close();
-
-        // After the response is sent, cache the LLM answer back to Pinecone as a synthetic chunk.
-        // `after()` runs after the response is flushed but before the serverless function exits.
-        const routineNames = allMatches
-          .map((m) => m.metadata?.subroutine_name as string)
-          .filter(Boolean);
-        after(
-          upsertSyntheticChunk(sanitizedQuery, fullResponse.join(""), routineNames).catch(
-            console.error
-          )
-        );
       },
     });
 
