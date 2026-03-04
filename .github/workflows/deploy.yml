@@ -24,6 +24,26 @@ jobs:
       - name: Install Vercel CLI
         run: npm install -g vercel@latest
 
+      - name: Get or create Vercel project
+        id: vercel-project
+        run: |
+          PROJECT=$(curl -s "https://api.vercel.com/v9/projects/legacylens" \
+            -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}")
+
+          PROJECT_ID=$(echo "$PROJECT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('id',''))" 2>/dev/null)
+
+          if [ -z "$PROJECT_ID" ]; then
+            echo "Project not found — creating..."
+            RESULT=$(curl -s -X POST "https://api.vercel.com/v10/projects" \
+              -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
+              -H "Content-Type: application/json" \
+              -d '{"name":"legacylens","framework":"nextjs"}')
+            PROJECT_ID=$(echo "$RESULT" | python3 -c "import sys,json; print(json.load(sys.stdin)['id'])")
+          fi
+
+          echo "project_id=$PROJECT_ID" >> $GITHUB_OUTPUT
+          echo "Project ID: $PROJECT_ID"
+
       - name: Deploy to Vercel
         run: |
           DEPLOY_ARGS="--yes \
@@ -39,6 +59,7 @@ jobs:
           fi
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ steps.vercel-project.outputs.project_id }}
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
