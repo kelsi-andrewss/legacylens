@@ -141,7 +141,6 @@ export default function Home() {
   useEffect(() => {
     if (tutorialStep === null || isLoading || answer.length === 0) return;
     if (TOUR_STEPS[tutorialStep].query === null) return;
-    if (TOUR_STEPS[tutorialStep].waitFor === "search") return; // auto-advance after manual search is fine, let it through
     const timer = setTimeout(() => {
       if (tutorialStep < TOUR_STEPS.length - 1) {
         setTutorialStep((t) => (t !== null ? t + 1 : null));
@@ -166,9 +165,8 @@ export default function Home() {
   const highlightClass = (region: string) => {
     if (tourHighlight !== region) return "";
     const isAction = tutorialStep !== null && !!TOUR_STEPS[tutorialStep].waitFor;
-    return isAction
-      ? "ring-2 ring-blue-500 ring-offset-2 rounded-lg animate-pulse"
-      : "ring-2 ring-blue-400 ring-offset-2 rounded-lg";
+    const scrim = "relative z-[50] shadow-[0_0_0_9999px_rgba(0,0,0,0.55)] rounded-lg";
+    return isAction ? `${scrim} ring-2 ring-blue-400 animate-pulse` : scrim;
   };
 
   return (
@@ -189,6 +187,17 @@ export default function Home() {
           </button>
         </div>
       </header>
+
+      {tutorialStep !== null && (
+        <TutorialBanner
+          step={tutorialStep}
+          onNext={() => {
+            if (tutorialStep < TOUR_STEPS.length - 1) setTutorialStep((t) => (t !== null ? t + 1 : null));
+            else setTutorialStep(null);
+          }}
+          onExit={() => setTutorialStep(null)}
+        />
+      )}
 
       <main className="mx-auto max-w-6xl px-4 py-8">
         <div className="flex gap-8">
@@ -282,16 +291,6 @@ export default function Home() {
           </div>
         </div>
       </main>
-      {tutorialStep !== null && (
-        <TutorialBanner
-          step={tutorialStep}
-          onNext={() => {
-            if (tutorialStep < TOUR_STEPS.length - 1) setTutorialStep((t) => (t !== null ? t + 1 : null));
-            else setTutorialStep(null);
-          }}
-          onExit={() => setTutorialStep(null)}
-        />
-      )}
     </div>
   );
 }
