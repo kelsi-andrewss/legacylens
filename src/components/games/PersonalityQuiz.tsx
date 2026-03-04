@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import {
   QUIZ_QUESTIONS,
   TRAIT_TO_ROUTINE,
@@ -39,6 +39,14 @@ export default function PersonalityQuiz() {
   const [copied, setCopied] = useState(false);
 
   const abortRef = useRef<AbortController | null>(null);
+  const retakeRef = useRef<HTMLButtonElement>(null);
+
+  // Focus "Retake Quiz" button when result appears
+  useEffect(() => {
+    if (showResult) {
+      requestAnimationFrame(() => retakeRef.current?.focus());
+    }
+  }, [showResult]);
 
   const streamExplanation = useCallback(async (routine: string) => {
     setIsLoading(true);
@@ -212,6 +220,7 @@ export default function PersonalityQuiz() {
               <button
                 key={i}
                 onClick={() => handleAnswer(a.trait)}
+                aria-label={`Answer: ${a.text}`}
                 className="rounded-lg border border-ll-outline bg-ll-surface-variant px-4 py-4 text-left text-sm font-medium text-ll-on-surface shadow-sm transition-all hover:border-ll-primary hover:bg-ll-primary-container hover:text-ll-on-primary-container active:scale-[0.98]"
               >
                 {a.text}
@@ -226,7 +235,7 @@ export default function PersonalityQuiz() {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       {/* Result card */}
-      <div className="rounded-xl border border-ll-outline bg-gradient-to-br from-ll-primary-container to-ll-surface-variant p-8 shadow-sm">
+      <div className="rounded-xl border border-ll-outline bg-gradient-to-br from-ll-primary-container to-ll-surface-variant p-8 shadow-sm" aria-live="polite">
         <div className="mb-1 text-sm font-medium uppercase tracking-wider text-ll-primary">
           You are...
         </div>
@@ -248,6 +257,7 @@ export default function PersonalityQuiz() {
             {copied ? "Copied!" : "Copy Result"}
           </button>
           <button
+            ref={retakeRef}
             onClick={handleRetake}
             className="rounded-lg bg-ll-primary px-4 py-2 text-sm font-medium text-ll-on-primary transition-colors hover:bg-ll-primary-hover"
           >

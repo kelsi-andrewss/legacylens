@@ -12,10 +12,10 @@ const STORAGE_KEY = "connections-completed";
 const MAX_MISTAKES = 4;
 
 const difficultyColors: Record<Difficulty, string> = {
-  yellow: "bg-yellow-400 text-yellow-900",
-  green: "bg-green-500 text-white",
-  blue: "bg-blue-500 text-white",
-  purple: "bg-purple-600 text-white",
+  yellow: "bg-yellow-400 text-yellow-950",
+  green: "bg-green-700 text-white",
+  blue: "bg-blue-700 text-white",
+  purple: "bg-purple-700 text-white",
 };
 
 const difficultyOrder: Difficulty[] = ["yellow", "green", "blue", "purple"];
@@ -68,6 +68,7 @@ export default function ConnectionsGame() {
   const [allCompleted, setAllCompleted] = useState(false);
 
   const shakingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const newPuzzleRef = useRef<HTMLButtonElement>(null);
 
   const initPuzzle = useCallback(() => {
     const p = pickPuzzle();
@@ -93,6 +94,14 @@ export default function ConnectionsGame() {
       if (shakingTimerRef.current) clearTimeout(shakingTimerRef.current);
     };
   }, [initPuzzle]);
+
+  // Focus "New Puzzle" button when game ends
+  useEffect(() => {
+    if (gameOver) {
+      // Defer to next frame so the button is rendered
+      requestAnimationFrame(() => newPuzzleRef.current?.focus());
+    }
+  }, [gameOver]);
 
   const toggleSelect = useCallback(
     (name: string) => {
@@ -223,7 +232,7 @@ export default function ConnectionsGame() {
       </div>
 
       {!gameOver && (
-        <div className="flex items-center gap-1.5 text-sm text-ll-on-surface-muted">
+        <div className="flex items-center gap-1.5 text-sm text-ll-on-surface-muted" aria-live="polite">
           <span>Mistakes remaining:</span>
           {mistakeDots.map((i) => (
             <span
@@ -263,6 +272,8 @@ export default function ConnectionsGame() {
                 key={name}
                 onClick={() => toggleSelect(name)}
                 disabled={gameOver}
+                aria-label={`${isSelected ? "Deselect" : "Select"} routine ${name}`}
+                aria-pressed={isSelected}
                 className={`rounded-md px-2 py-3 text-xs font-mono font-bold transition-colors
                   ${
                     isSelected
@@ -300,11 +311,12 @@ export default function ConnectionsGame() {
 
       {/* Win/Loss message */}
       {gameOver && (
-        <div className="text-center">
+        <div className="text-center" aria-live="polite">
           <p className="text-lg font-semibold mb-3">
             {won ? "Congratulations!" : "Better luck next time"}
           </p>
           <button
+            ref={newPuzzleRef}
             onClick={initPuzzle}
             className="px-4 py-2 text-sm rounded-md bg-ll-on-surface text-ll-surface font-medium hover:bg-ll-on-surface-hover"
           >

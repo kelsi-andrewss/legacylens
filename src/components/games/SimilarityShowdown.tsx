@@ -96,6 +96,7 @@ export default function SimilarityShowdown() {
   const streakRef = useRef(streak);
   const highScoreRef = useRef(highScore);
   const resultTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const nextRoundRef = useRef<HTMLButtonElement>(null);
 
   // Keep refs in sync with state
   streakRef.current = streak;
@@ -116,6 +117,13 @@ export default function SimilarityShowdown() {
       if (resultTimerRef.current) clearTimeout(resultTimerRef.current);
     };
   }, []);
+
+  // Focus "Next Round" button when result appears
+  useEffect(() => {
+    if (result) {
+      requestAnimationFrame(() => nextRoundRef.current?.focus());
+    }
+  }, [result]);
 
   const fetchPair = useCallback(async () => {
     setLoading(true);
@@ -231,6 +239,7 @@ export default function SimilarityShowdown() {
           <button
             onClick={() => handleGuess(true)}
             disabled={loading}
+            aria-label={`Guess similarity is higher than ${THRESHOLD} percent`}
             className="rounded-lg bg-ll-primary px-6 py-2.5 text-sm font-semibold text-ll-on-primary shadow-sm hover:bg-ll-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             Higher than {THRESHOLD}%?
@@ -238,6 +247,7 @@ export default function SimilarityShowdown() {
           <button
             onClick={() => handleGuess(false)}
             disabled={loading}
+            aria-label={`Guess similarity is lower than ${THRESHOLD} percent`}
             className="rounded-lg bg-ll-surface-tonal px-6 py-2.5 text-sm font-semibold text-ll-on-surface shadow-sm hover:bg-ll-outline disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             Lower than {THRESHOLD}%?
@@ -255,6 +265,7 @@ export default function SimilarityShowdown() {
             exit={{ opacity: 0, scale: 0.8 }}
             transition={{ type: "spring", duration: 0.5, bounce: 0.3 }}
             className="flex flex-col items-center gap-3"
+            aria-live="polite"
           >
             <AnimatedScore target={actualScore ?? 0} />
 
@@ -268,7 +279,7 @@ export default function SimilarityShowdown() {
                   transition={{ type: "spring", duration: 0.4 }}
                   className="flex items-center gap-2 text-lg font-semibold text-green-600 dark:text-green-400"
                 >
-                  <CheckCircle2 className="h-5 w-5" />
+                  <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
                   Correct!
                 </motion.div>
               )}
@@ -283,7 +294,7 @@ export default function SimilarityShowdown() {
                   className="space-y-1 text-center"
                 >
                   <div className="flex items-center justify-center gap-2 text-lg font-semibold text-red-600 dark:text-red-400">
-                    <XCircle className="h-5 w-5" />
+                    <XCircle className="h-5 w-5" aria-hidden="true" />
                     Wrong!
                   </div>
                   <div className="text-sm text-ll-on-surface-muted">
@@ -301,6 +312,7 @@ export default function SimilarityShowdown() {
                 transition={{ delay: 0.2 }}
               >
                 <button
+                  ref={nextRoundRef}
                   onClick={fetchPair}
                   className="mt-2 rounded-lg bg-ll-primary px-6 py-2.5 text-sm font-semibold text-ll-on-primary shadow-sm hover:bg-ll-primary-hover transition-colors"
                 >
