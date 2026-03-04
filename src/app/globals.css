@@ -102,9 +102,9 @@
   --ll-radius-sm: 4px;
   --ll-radius-md: 8px;
   --ll-radius-lg: 12px;
-  --ll-font-display: var(--font-ibm-plex-mono);
-  --ll-font-body: var(--font-ibm-plex-sans);
-  --ll-font-mono: var(--font-geist-mono);
+  --ll-font-display: var(--font-inter);
+  --ll-font-body: var(--font-inter);
+  --ll-font-mono: var(--font-jetbrains-mono);
   --ll-primary-hover: #00b8d9;
   --ll-primary-faint: #0a2a3a;
   --ll-primary-muted: #0099b8;

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, IBM_Plex_Mono, IBM_Plex_Sans, Space_Grotesk, Archivo_Narrow } from "next/font/google";
+import { Geist, Geist_Mono, IBM_Plex_Mono, IBM_Plex_Sans, Space_Grotesk, Archivo_Narrow, Inter, JetBrains_Mono } from "next/font/google";
 import Header from "@/components/Header";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import "./globals.css";
@@ -38,6 +38,18 @@ const archivoNarrow = Archivo_Narrow({
   subsets: ["latin"],
 });
 
+const inter = Inter({
+  variable: "--font-inter",
+  weight: ["400", "500", "600"],
+  subsets: ["latin"],
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
+  weight: ["400", "500", "700"],
+  subsets: ["latin"],
+});
+
 export const metadata: Metadata = {
   title: "LegacyLens",
   description: "RAG-powered LAPACK/BLAS code explorer",
@@ -51,7 +63,7 @@ export default function RootLayout({
   return (
     <html lang="en" data-theme="punch-card">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${ibmPlexMono.variable} ${ibmPlexSans.variable} ${spaceGrotesk.variable} ${archivoNarrow.variable} font-[family-name:var(--ll-font-body)] antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${ibmPlexMono.variable} ${ibmPlexSans.variable} ${spaceGrotesk.variable} ${archivoNarrow.variable} ${inter.variable} ${jetbrainsMono.variable} font-[family-name:var(--ll-font-body)] antialiased`}
       >
         <ThemeProvider>
           <Header />
