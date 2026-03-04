@@ -38,6 +38,7 @@ export default function Home() {
   const [pinnedItems, setPinnedItems] = useState<PinnedItem[]>(loadPinnedItems);
   const [activeChallenge, setActiveChallenge] = useState<Challenge | null>(null);
   const [activeRoutine, setActiveRoutine] = useState<string | null>(null);
+  const [discoveredCount, setDiscoveredCount] = useState(() => getStats().discovered);
 
   const handleRoutineHover = useCallback((name: string | null) => {
     setActiveRoutine(name);
@@ -158,6 +159,7 @@ export default function Home() {
                     }
                   }
                 }
+                setDiscoveredCount(getStats().discovered);
                 // Check for challenge trigger after discoveries
                 const stats = getStats();
                 if (shouldTriggerChallenge(stats)) {
@@ -271,13 +273,26 @@ export default function Home() {
             <div className="flex items-center justify-end">
               <button
                 onClick={() => setShowPokedex((prev) => !prev)}
-                className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
                   showPokedex
                     ? "bg-ll-primary-container text-ll-on-primary-container"
-                    : "border border-ll-outline text-ll-on-surface-muted hover:bg-ll-surface-tonal"
+                    : "border border-ll-outline text-ll-on-surface hover:bg-ll-surface-tonal"
                 }`}
               >
-                {showPokedex ? "Back to Search" : "Collection"}
+                {showPokedex ? (
+                  "← Search"
+                ) : (
+                  <>
+                    <span>Archive</span>
+                    <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+                      discoveredCount > 0
+                        ? "bg-ll-primary text-ll-surface"
+                        : "bg-ll-surface-tonal text-ll-on-surface-muted"
+                    }`}>
+                      {discoveredCount > 0 ? `${discoveredCount} found` : "start exploring"}
+                    </span>
+                  </>
+                )}
               </button>
             </div>
 
