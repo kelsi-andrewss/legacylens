@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+/* ── Z-index scale ── */
+:root {
+  --z-decoration: -1;
+  --z-content: 0;
+  --z-float: 10;
+  --z-sticky: 30;
+  --z-dropdown: 40;
+  --z-toast: 50;
+}
+
 /* ── SSR fallback: punch-card defaults ── */
 :root {
   --ll-surface: #F5F0E8;
@@ -118,7 +128,7 @@ body {
 /* Base header stacking context — keeps ThemePicker dropdown above main content */
 .theme-header {
   position: relative;
-  z-index: 50;
+  z-index: var(--z-sticky);
 }
 
 /* Punch Card: orange bottom border on header, command prompt in search */
@@ -140,7 +150,7 @@ body {
   font-family: var(--ll-font-mono);
   font-weight: 700;
   font-size: 1rem;
-  z-index: 10;
+  z-index: var(--z-float);
   pointer-events: none;
 }
 
@@ -165,7 +175,7 @@ body {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 0;
+  z-index: var(--z-decoration);
   opacity: 0.04;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-repeat: repeat;
@@ -178,14 +188,8 @@ body {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  z-index: 0;
+  z-index: var(--z-decoration);
   background: radial-gradient(ellipse at center, transparent 50%, rgba(15, 25, 41, 0.12) 100%);
-}
-
-/* Blueprint: ensure main content sits above overlays */
-[data-theme="blueprint"] body > * {
-  position: relative;
-  z-index: 1;
 }
 
 /* Blueprint: over-shot ink lines on bordered elements */
@@ -200,7 +204,7 @@ body {
   position: absolute;
   background: var(--ll-outline);
   pointer-events: none;
-  z-index: 1;
+  z-index: var(--z-float);
 }
 
 /* Top-left corner: horizontal over-shot */
@@ -232,7 +236,7 @@ body {
   bottom: 0;
   width: 16px;
   pointer-events: none;
-  z-index: 2;
+  z-index: var(--z-float);
   background-image: radial-gradient(circle, var(--ll-outline) 3px, transparent 3px);
   background-size: 16px 18px;
   background-position: center 4px;

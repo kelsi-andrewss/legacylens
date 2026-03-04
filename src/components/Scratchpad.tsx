@@ -108,7 +108,7 @@ export default function Scratchpad({
       </aside>
 
       {/* Mobile: collapsible bottom panel */}
-      <div className="fixed inset-x-0 bottom-0 z-40 lg:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-[var(--z-sticky)] lg:hidden">
         <button
           onClick={() => setIsOpen((prev) => !prev)}
           className="flex w-full items-center justify-between border-t border-ll-outline bg-ll-surface-variant px-4 py-2"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useTheme } from "@/components/ThemeProvider";
 import { THEMES, ThemeId } from "@/lib/themes";
 
@@ -8,10 +8,22 @@ export default function ThemePicker() {
   const { theme, setTheme } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [pos, setPos] = useState<{ top: number; right: number } | null>(null);
+
+  const open = useCallback(() => {
+    if (!buttonRef.current) return;
+    const rect = buttonRef.current.getBoundingClientRect();
+    setPos({ top: rect.bottom + 8, right: window.innerWidth - rect.right });
+    setIsOpen(true);
+  }, []);
 
   useEffect(() => {
     function handleMouseDown(e: MouseEvent) {
-      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+      if (
+        panelRef.current && !panelRef.current.contains(e.target as Node) &&
+        buttonRef.current && !buttonRef.current.contains(e.target as Node)
+      ) {
         setIsOpen(false);
       }
     }
@@ -22,9 +34,10 @@ export default function ThemePicker() {
   }, [isOpen]);
 
   return (
-    <div ref={panelRef} className="relative">
+    <div className="relative">
       <button
-        onClick={() => setIsOpen((o) => !o)}
+        ref={buttonRef}
+        onClick={() => (isOpen ? setIsOpen(false) : open())}
         className="text-ll-on-surface-muted hover:text-ll-on-surface transition-colors p-1"
         aria-label="Theme settings"
       >
@@ -40,8 +53,12 @@ export default function ThemePicker() {
         </svg>
       </button>
 
-      {isOpen && (
-        <div className="absolute right-0 top-full mt-2 z-[100] bg-ll-surface-variant border border-ll-outline rounded-[var(--ll-radius-md)] shadow-lg min-w-[220px] p-2">
+      {isOpen && pos && (
+        <div
+          ref={panelRef}
+          className="fixed z-[var(--z-dropdown)] bg-ll-surface-variant border border-ll-outline rounded-[var(--ll-radius-md)] shadow-lg min-w-[220px] p-2"
+          style={{ top: pos.top, right: pos.right }}
+        >
           {THEMES.map((t) => (
             <button
               key={t.id}
