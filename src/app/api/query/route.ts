@@ -1,5 +1,5 @@
 import { NextRequest, after } from "next/server";
-import { embedQuery, getOpenAI } from "@/lib/openai";
+import { embedQuery, getOpenAI, generateHypotheticalDocument } from "@/lib/openai";
 import { queryPinecone, fetchRoutinesByNames, upsertSyntheticChunk } from "@/lib/pinecone";
 import { QueryMode, Lens, getSystemPrompt, buildUserMessage } from "@/lib/prompts";
 import { CHAT_MODEL, TEMPERATURE, MAX_TOKENS, DEFAULT_TOP_K, GRAPH_EXPANSION_MAX_CHUNKS, MIN_SCORE_THRESHOLD } from "@/lib/config";
@@ -44,8 +44,23 @@ export async function POST(req: NextRequest) {
       pineconeFilter.data_type_prefix = { $eq: sanitizeString(filters.data_type_prefix) };
     }
 
-    // Embed query
-    const embedding = await embedQuery(sanitizedQuery);
+    // Detect LAPACK-style routine name tokens in the query (e.g. DGESVDX, DPOTRF)
+    const nameTokens = [...new Set((sanitizedQuery.match(/\b[A-Z][A-Z0-9]{3,7}\b/g) ?? []))];
+    if (nameTokens.length > 0) {
+      pineconeFilter.subroutine_name = { $in: nameTokens };
+    }
+
+    // Embed query — use HyDE for natural language queries with no detected routine names
+    let textToEmbed = sanitizedQuery;
+    if (nameTokens.length === 0) {
+      try {
+        const hydeDoc = await generateHypotheticalDocument(sanitizedQuery);
+        if (hydeDoc) textToEmbed = hydeDoc;
+      } catch {
+        // fallback: textToEmbed stays as sanitizedQuery
+      }
+    }
+    const embedding = await embedQuery(textToEmbed);
     const embedMs = Date.now() - t0;
 
     // Search Pinecone — synthetic chunks included only for explain mode (most benefit from cached context).
@@ -57,7 +72,22 @@ export async function POST(req: NextRequest) {
     );
 
     const pineconeMs = Date.now() - t0 - embedMs;
-    const filteredMatches = matches.filter(m => (m.score ?? 0) >= MIN_SCORE_THRESHOLD);
+    // Relax threshold when name filter is active — metadata filter already guarantees relevance
+    const threshold = nameTokens.length > 0 ? 0.3 : MIN_SCORE_THRESHOLD;
+    let filteredMatches = matches.filter(m => (m.score ?? 0) >= threshold);
+
+    // Fallback: name filter returned nothing — retry without subroutine_name filter
+    if (filteredMatches.length === 0 && nameTokens.length > 0 && pineconeFilter.subroutine_name) {
+      delete pineconeFilter.subroutine_name;
+      const fallbackMatches = await queryPinecone(
+        embedding,
+        DEFAULT_TOP_K,
+        Object.keys(pineconeFilter).length > 0 ? pineconeFilter : undefined,
+        { includeSynthetic: mode === "explain" }
+      );
+      filteredMatches = fallbackMatches.filter(m => (m.score ?? 0) >= MIN_SCORE_THRESHOLD);
+    }
+
     const filtersApplied = Object.keys(pineconeFilter).length > 0;
 
     // Guard: no results from Pinecone — skip LLM call entirely
