@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { embedQuery, getOpenAI } from "@/lib/openai";
 import { queryPinecone } from "@/lib/pinecone";
 import { QueryMode, getSystemPrompt, buildUserMessage } from "@/lib/prompts";
+import { CHAT_MODEL, TEMPERATURE, MAX_TOKENS, DEFAULT_TOP_K } from "@/lib/config";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -34,7 +35,7 @@ export async function POST(req: NextRequest) {
     // Search Pinecone
     const matches = await queryPinecone(
       embedding,
-      5,
+      DEFAULT_TOP_K,
       Object.keys(pineconeFilter).length > 0 ? pineconeFilter : undefined
     );
 
@@ -44,14 +45,14 @@ export async function POST(req: NextRequest) {
 
     // Stream response from GPT-4o-mini
     const stream = await getOpenAI().chat.completions.create({
-      model: "gpt-4o-mini",
+      model: CHAT_MODEL,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userMessage },
       ],
       stream: true,
-      temperature: 0.3,
-      max_tokens: 2000,
+      temperature: TEMPERATURE,
+      max_tokens: MAX_TOKENS,
     });
 
     // Convert to ReadableStream
