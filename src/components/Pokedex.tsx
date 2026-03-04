@@ -7,6 +7,7 @@ interface RoutineEntry {
   name: string;
   category: string;
   dataTypePrefix: string;
+  discoveredAt?: number;
 }
 
 const POKEDEX_KEY = "ll-pokedex";
@@ -47,7 +48,7 @@ export function saveRoutineMeta(
   try {
     const entries = loadEntries();
     if (entries.some((e) => e.name === name)) return;
-    entries.push({ name, category, dataTypePrefix });
+    entries.push({ name, category, dataTypePrefix, discoveredAt: Date.now() });
     localStorage.setItem("ll-pokedex-meta", JSON.stringify(entries));
   } catch {
     // localStorage full or unavailable
@@ -58,6 +59,7 @@ export default function Pokedex() {
   const [entries, setEntries] = useState<RoutineEntry[]>([]);
   const [stats, setStats] = useState({ discovered: 0, total: 0, xp: 0 });
   const [search, setSearch] = useState("");
+  const [sortOrder, setSortOrder] = useState<"discovery" | "alpha">("discovery");
 
   useEffect(() => {
     function refresh() {
@@ -91,17 +93,26 @@ export default function Pokedex() {
   }
 
   const filtered = useMemo(() => {
-    if (!search) return entries;
-    const q = search.toLowerCase();
-    return entries.filter(
-      (e) =>
-        e.name.toLowerCase().includes(q) ||
-        e.category.toLowerCase().includes(q) ||
-        (typeLabels[e.dataTypePrefix] || e.dataTypePrefix)
-          .toLowerCase()
-          .includes(q)
-    );
-  }, [entries, search]);
+    let result = !search
+      ? entries
+      : entries.filter(
+          (e) =>
+            e.name.toLowerCase().includes(search.toLowerCase()) ||
+            e.category.toLowerCase().includes(search.toLowerCase()) ||
+            (typeLabels[e.dataTypePrefix] || e.dataTypePrefix)
+              .toLowerCase()
+              .includes(search.toLowerCase())
+        );
+    if (sortOrder === "alpha") {
+      result = [...result].sort((a, b) =>
+        a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+      );
+    }
+    return result;
+  }, [entries, search, sortOrder]);
+
+  const lapackCount = entries.filter((e) => e.category === "LAPACK").length;
+  const blasCount = entries.filter((e) => e.category === "BLAS").length;
 
   return (
     <div className="rounded-lg border border-ll-outline bg-ll-surface-variant p-6">
@@ -134,6 +145,42 @@ export default function Pokedex() {
           onChange={(e) => setSearch(e.target.value)}
           className="mb-4 w-full rounded-md border border-ll-outline bg-ll-surface px-3 py-2 text-sm text-ll-on-surface placeholder:text-ll-on-surface-muted focus:border-ll-primary focus:outline-none focus:ring-1 focus:ring-ll-primary"
         />
+      )}
+
+      {/* Sort toggle */}
+      {entries.length > 0 && (
+        <div className="mb-2 flex justify-end gap-1 text-xs">
+          {(["discovery", "alpha"] as const).map((s) => (
+            <button
+              key={s}
+              onClick={() => setSortOrder(s)}
+              className={`rounded px-2 py-0.5 transition-colors ${
+                sortOrder === s
+                  ? "bg-ll-primary-container text-ll-on-primary-container"
+                  : "text-ll-on-surface-muted hover:bg-ll-surface-tonal"
+              }`}
+            >
+              {s === "discovery" ? "# Order" : "A\u2013Z"}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Category breakdown */}
+      {entries.length > 0 && (
+        <div className="mb-3 flex items-center gap-3 text-xs">
+          <span className="font-medium text-ll-on-surface-muted">Breakdown:</span>
+          {lapackCount > 0 && (
+            <span className="rounded-full bg-blue-500/20 px-2 py-0.5 text-blue-300">
+              LAPACK · {lapackCount}
+            </span>
+          )}
+          {blasCount > 0 && (
+            <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-emerald-300">
+              BLAS · {blasCount}
+            </span>
+          )}
+        </div>
       )}
 
       {/* Empty state */}
@@ -174,6 +221,12 @@ export default function Pokedex() {
                 categoryBorderColors[entry.category] || "border-l-ll-outline"
               }`}
             >
+              {/* New badge */}
+              {entry.discoveredAt && Date.now() - entry.discoveredAt < 60_000 && (
+                <span className="absolute left-2 top-1.5 rounded-full bg-ll-primary px-1.5 py-0.5 text-[9px] font-bold text-ll-surface">
+                  New
+                </span>
+              )}
               {/* Discovery order */}
               <span
                 className="absolute right-2 top-1.5 text-ll-on-surface-muted"
