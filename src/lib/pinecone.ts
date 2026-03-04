@@ -39,24 +39,46 @@ export async function queryPinecone(
   return results.matches || [];
 }
 
-let cachedIds: string[] | null = null;
+const EMBEDDING_DIM = 1536;
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
-export async function getAllRoutineIds(): Promise<string[]> {
-  if (cachedIds) return cachedIds;
-  const index = getIndex();
-  const ids: string[] = [];
-  let paginationToken: string | undefined;
-  do {
-    const page = await index.listPaginated({ limit: 100, paginationToken });
-    if (page.vectors) {
-      for (const v of page.vectors) {
-        if (v.id) ids.push(v.id);
-      }
-    }
-    paginationToken = page.pagination?.next;
-  } while (paginationToken);
-  cachedIds = ids;
+let cachedSample: { ids: string[]; timestamp: number } | null = null;
+
+function generateRandomVector(dim: number): number[] {
+  const raw = Array.from({ length: dim }, () => Math.random() * 2 - 1);
+  const mag = Math.sqrt(raw.reduce((sum, v) => sum + v * v, 0));
+  return raw.map((v) => v / mag);
+}
+
+function shuffle<T>(arr: T[]): T[] {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+export async function getRandomRoutineIds(count: number): Promise<string[]> {
+  if (cachedSample && Date.now() - cachedSample.timestamp < CACHE_TTL_MS) {
+    return shuffle(cachedSample.ids).slice(0, count);
+  }
+
+  const vector = generateRandomVector(EMBEDDING_DIM);
+  const matches = await getIndex().query({
+    vector,
+    topK: count,
+    includeMetadata: false,
+  });
+
+  const ids = (matches.matches || []).map((m) => m.id);
+  cachedSample = { ids, timestamp: Date.now() };
   return ids;
+}
+
+/** @deprecated Use getRandomRoutineIds(count) directly. */
+export async function getAllRoutineIds(): Promise<string[]> {
+  return getRandomRoutineIds(100);
 }
 
 export async function fetchRoutines(ids: string[]) {
@@ -64,12 +86,8 @@ export async function fetchRoutines(ids: string[]) {
   return index.fetch({ ids });
 }
 
-export async function getCosineSimilarity(idA: string, idB: string): Promise<number> {
-  const index = getIndex();
-  const result = await index.fetch({ ids: [idA, idB] });
-  const vecA = result.records[idA]?.values;
-  const vecB = result.records[idB]?.values;
-  if (!vecA || !vecB) throw new Error("Could not fetch vectors");
+/** Pure cosine similarity between two vectors. */
+export function cosineSimilarity(vecA: number[], vecB: number[]): number {
   let dot = 0, magA = 0, magB = 0;
   for (let i = 0; i < vecA.length; i++) {
     dot += vecA[i] * vecB[i];
@@ -77,4 +95,27 @@ export async function getCosineSimilarity(idA: string, idB: string): Promise<num
     magB += vecB[i] * vecB[i];
   }
   return dot / (Math.sqrt(magA) * Math.sqrt(magB));
+}
+
+/**
+ * Fetch two vectors from Pinecone and compute cosine similarity.
+ * Returns both the score and the fetched records so callers can
+ * extract metadata without a second round-trip.
+ */
+export async function getCosineSimilarityWithRecords(
+  idA: string,
+  idB: string
+): Promise<{ score: number; records: Awaited<ReturnType<ReturnType<Pinecone["index"]>["fetch"]>>["records"] }> {
+  const index = getIndex();
+  const result = await index.fetch({ ids: [idA, idB] });
+  const vecA = result.records[idA]?.values;
+  const vecB = result.records[idB]?.values;
+  if (!vecA || !vecB) throw new Error("Could not fetch vectors");
+  return { score: cosineSimilarity(vecA, vecB), records: result.records };
+}
+
+/** @deprecated Use getCosineSimilarityWithRecords to avoid a double-fetch. */
+export async function getCosineSimilarity(idA: string, idB: string): Promise<number> {
+  const { score } = await getCosineSimilarityWithRecords(idA, idB);
+  return score;
 }

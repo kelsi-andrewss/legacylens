@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { ExternalLink } from "lucide-react";
 import { Light as SyntaxHighlighter } from "react-syntax-highlighter";
 import fortran from "react-syntax-highlighter/dist/esm/languages/hljs/fortran";
 import { atomOneDark } from "react-syntax-highlighter/dist/esm/styles/hljs";
@@ -88,7 +89,7 @@ export default function CodeSnippet({ chunk, onPin, isPinned }: CodeSnippetProps
             rel="noopener noreferrer"
             className="text-xs text-ll-on-surface-muted hover:text-ll-on-surface transition-colors"
           >
-            View on GitHub ↗
+            View on GitHub <ExternalLink className="inline h-3 w-3" />
           </a>
           <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
             score > 0.8

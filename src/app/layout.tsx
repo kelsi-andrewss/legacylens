@@ -51,7 +51,7 @@ export default function RootLayout({
   return (
     <html lang="en" data-theme="punch-card">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${ibmPlexMono.variable} ${ibmPlexSans.variable} ${spaceGrotesk.variable} ${archivoNarrow.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${ibmPlexMono.variable} ${ibmPlexSans.variable} ${spaceGrotesk.variable} ${archivoNarrow.variable} font-[family-name:var(--ll-font-body)] antialiased`}
       >
         <ThemeProvider>
           <Header />
