@@ -2,10 +2,10 @@
 
 import { useState, type ReactNode } from "react";
 import dynamic from "next/dynamic";
-import { Target, Brain, Link, Dices } from "lucide-react";
+import { Target, Brain, Link, Dices, Wand2 } from "lucide-react";
 
 const GAMES: {
-  id: "similarity" | "quiz" | "connections" | "roulette";
+  id: "similarity" | "quiz" | "connections" | "roulette" | "spellbook";
   title: string;
   icon: ReactNode;
   description: string;
@@ -34,9 +34,15 @@ const GAMES: {
     icon: <Dices className="w-5 h-5" />,
     description: "Spin the wheel and discover a random LAPACK routine",
   },
+  {
+    id: "spellbook",
+    title: "LAPACK Spellbook",
+    icon: <Wand2 className="w-5 h-5" />,
+    description: "Cast the right LAPACK spell to survive 15 fantasy encounters",
+  },
 ];
 
-type GameId = "similarity" | "quiz" | "connections" | "roulette";
+type GameId = "similarity" | "quiz" | "connections" | "roulette" | "spellbook";
 
 const gameComponents: Record<GameId, ReturnType<typeof dynamic>> = {
   similarity: dynamic(() => import("@/components/games/SimilarityShowdown"), {
@@ -49,6 +55,9 @@ const gameComponents: Record<GameId, ReturnType<typeof dynamic>> = {
     loading: () => <p className="text-ll-on-surface-muted">Loading...</p>,
   }),
   roulette: dynamic(() => import("@/components/games/RoutineRoulette"), {
+    loading: () => <p className="text-ll-on-surface-muted">Loading...</p>,
+  }),
+  spellbook: dynamic(() => import("@/components/games/SpellbookGame"), {
     loading: () => <p className="text-ll-on-surface-muted">Loading...</p>,
   }),
 };
