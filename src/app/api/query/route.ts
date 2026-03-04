@@ -1,7 +1,7 @@
 import { NextRequest, after } from "next/server";
 import { embedQuery, getOpenAI } from "@/lib/openai";
 import { queryPinecone, fetchRoutinesByNames, upsertSyntheticChunk } from "@/lib/pinecone";
-import { QueryMode, getSystemPrompt, buildUserMessage } from "@/lib/prompts";
+import { QueryMode, Lens, getSystemPrompt, buildUserMessage } from "@/lib/prompts";
 import { CHAT_MODEL, TEMPERATURE, MAX_TOKENS, DEFAULT_TOP_K, GRAPH_EXPANSION_MAX_CHUNKS, MIN_SCORE_THRESHOLD } from "@/lib/config";
 import { validateQuery, validateMode, sanitizeString } from "@/lib/validation";
 
@@ -11,11 +11,13 @@ export const maxDuration = 30;
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { query, mode = "explain", filters, theme } = body as {
+    const { query, mode = "explain", filters, theme, lens, history = [] } = body as {
       query: string;
       mode?: QueryMode;
       filters?: { category?: string; data_type_prefix?: string };
       theme?: string;
+      lens?: Lens;
+      history?: { role: 'user' | 'assistant'; content: string }[];
     };
 
     const queryResult = validateQuery(query);
@@ -88,7 +90,7 @@ export async function POST(req: NextRequest) {
     const allMatches = [...filteredMatches, ...expanded].slice(0, GRAPH_EXPANSION_MAX_CHUNKS);
 
     // Build context
-    const systemPrompt = getSystemPrompt(mode as QueryMode, sanitizedTheme);
+    const systemPrompt = getSystemPrompt(mode as QueryMode, sanitizedTheme, lens);
     const userMessage = buildUserMessage(sanitizedQuery, allMatches as { metadata: Record<string, unknown>; score?: number }[]);
 
     // Stream response from GPT-4o-mini
@@ -96,6 +98,7 @@ export async function POST(req: NextRequest) {
       model: CHAT_MODEL,
       messages: [
         { role: "system", content: systemPrompt },
+        ...history.slice(-10),
         { role: "user", content: userMessage },
       ],
       stream: true,

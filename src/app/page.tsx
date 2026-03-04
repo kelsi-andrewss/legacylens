@@ -7,6 +7,7 @@ import AnswerStream from "@/components/AnswerStream";
 import CodeSnippet, { type ChunkData } from "@/components/CodeSnippet";
 import Pokedex, { saveRoutineMeta } from "@/components/Pokedex";
 import { markDiscovered, isDiscovered, addXP, getStats, markAllAsSeen, hasUnseenDiscoveries } from "@/lib/pokedex";
+import { type Lens } from "@/lib/prompts";
 import Scratchpad, { type PinnedItem } from "@/components/Scratchpad";
 import ChallengeToast from "@/components/ChallengeToast";
 import { shouldTriggerChallenge, generateChallenge, type Challenge } from "@/lib/challenges";
@@ -26,7 +27,10 @@ function loadPinnedItems(): PinnedItem[] {
 }
 
 export default function Home() {
+  const [messages, setMessages] = useState<{ role: 'user' | 'assistant'; content: string }[]>([]);
   const [mode, setMode] = useState("explain");
+  const [lens, setLens] = useState<Lens | undefined>(undefined);
+  const lensRef = useRef<Lens | undefined>(undefined);
   const [answer, setAnswer] = useState("");
   const [chunks, setChunks] = useState<ChunkData[]>([]);
   const [lastQuery, setLastQuery] = useState("");
@@ -41,6 +45,11 @@ export default function Home() {
   const [activeRoutine, setActiveRoutine] = useState<string | null>(null);
   const [discoveredCount, setDiscoveredCount] = useState(() => getStats().discovered);
   const [hasUnseen, setHasUnseen] = useState(() => hasUnseenDiscoveries());
+
+  const handleLensChange = useCallback((newLens: Lens | undefined) => {
+    setLens(newLens);
+    lensRef.current = newLens;
+  }, []);
 
   const handleRoutineHover = useCallback((name: string | null) => {
     setActiveRoutine(name);
@@ -108,6 +117,8 @@ export default function Home() {
       abortControllerRef.current = controller;
 
       const activeMode = modeOverride || mode;
+      // Capture messages before any await — state reads after await see stale values
+      const currentMessages = messages;
       setIsLoading(true);
       setAnswer("");
       setChunks([]);
@@ -120,7 +131,7 @@ export default function Home() {
         const response = await fetch("/api/query", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query, mode: activeMode }),
+          body: JSON.stringify({ query, mode: activeMode, lens: lensRef.current, history: currentMessages }),
           signal: controller.signal,
         });
 
@@ -133,6 +144,7 @@ export default function Home() {
 
         const decoder = new TextDecoder();
         let buffer = "";
+        const responseChunks: string[] = [];
 
         while (true) {
           const { done, value } = await reader.read();
@@ -173,6 +185,7 @@ export default function Home() {
                   }
                 }
               } else if (event.type === "text") {
+                responseChunks.push(event.data as string);
                 setAnswer((prev) => prev + event.data);
               } else if (event.type === "error") {
                 setAnswer(event.data as string);
@@ -183,6 +196,16 @@ export default function Home() {
             }
           }
         }
+
+        // Append user query and assistant response to conversation history
+        const fullResponse = responseChunks.join("");
+        if (query.trim() && fullResponse) {
+          setMessages((prev) => [
+            ...prev,
+            { role: 'user', content: query },
+            { role: 'assistant', content: fullResponse },
+          ]);
+        }
       } catch (error) {
         if (error instanceof Error && error.name === "AbortError") return;
         console.error("Search error:", error);
@@ -191,7 +214,7 @@ export default function Home() {
         setIsLoading(false);
       }
     },
-    [mode]
+    [mode, messages]
   );
 
   const handleRoutineClick = useCallback(
@@ -328,13 +351,26 @@ export default function Home() {
               <Pokedex />
             ) : (
             <>
-            <SearchBar
-              onSearch={handleSearch}
-              isLoading={isLoading}
-              externalQuery={exampleQuery}
-            />
+            <div className="flex items-start gap-2">
+              <div className="flex-1">
+                <SearchBar
+                  onSearch={handleSearch}
+                  isLoading={isLoading}
+                  externalQuery={exampleQuery}
+                />
+              </div>
+              {messages.length > 0 && (
+                <button
+                  onClick={() => setMessages([])}
+                  className="mt-1 shrink-0 rounded-md border border-ll-outline px-3 py-2 text-sm text-ll-on-surface-muted transition-colors hover:border-ll-primary hover:text-ll-on-surface"
+                  title="Clear conversation history"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
             <SuggestedSearches onSelect={handleSuggestedSelect} />
-            <ModeSelector mode={mode} onModeChange={handleModeChange} />
+            <ModeSelector mode={mode} onModeChange={handleModeChange} lens={lens} onLensChange={handleLensChange} />
 
             {(answer || isLoading) && (
               <AnswerStream
