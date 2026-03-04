@@ -325,3 +325,25 @@ body {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* ── Joy: Snap-to-Focus Micro-Interactions ── */
+@keyframes specular-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 rgba(0, 212, 255, 0);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.15);
+  }
+}
+
+[data-theme="joy"] .snap-focus {
+  transition:
+    transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 300ms ease,
+    opacity 200ms ease;
+}
+
+[data-theme="joy"] .snap-focus:hover {
+  transform: scale(1.005);
+  box-shadow: 0 0 24px rgba(0, 212, 255, 0.12);
+}
