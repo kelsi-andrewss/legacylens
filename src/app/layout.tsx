@@ -61,7 +61,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" data-theme="punch-card">
+    <html lang="en" data-theme="joy">
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${ibmPlexMono.variable} ${ibmPlexSans.variable} ${spaceGrotesk.variable} ${archivoNarrow.variable} ${inter.variable} ${jetbrainsMono.variable} font-[family-name:var(--ll-font-body)] antialiased`}
       >

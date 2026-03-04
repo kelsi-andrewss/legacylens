@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import SearchBar from "@/components/SearchBar";
 import ModeSelector from "@/components/ModeSelector";
 import AnswerStream from "@/components/AnswerStream";
 import CodeSnippet, { type ChunkData } from "@/components/CodeSnippet";
-import { useTheme } from "@/components/ThemeProvider";
 import Pokedex, { saveRoutineMeta } from "@/components/Pokedex";
 import { markDiscovered, isDiscovered, addXP, getStats } from "@/lib/pokedex";
 import Scratchpad, { type PinnedItem } from "@/components/Scratchpad";
@@ -33,9 +32,6 @@ export default function Home() {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
   const [exampleQuery, setExampleQuery] = useState<string | undefined>();
-  const { resolvedTheme } = useTheme();
-  const resolvedThemeRef = useRef(resolvedTheme);
-  resolvedThemeRef.current = resolvedTheme;
   const [showPokedex, setShowPokedex] = useState(false);
   const [pinnedItems, setPinnedItems] = useState<PinnedItem[]>(loadPinnedItems);
   const [activeChallenge, setActiveChallenge] = useState<Challenge | null>(null);
@@ -111,7 +107,7 @@ export default function Home() {
         const response = await fetch("/api/query", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query, mode: activeMode, theme: resolvedThemeRef.current }),
+          body: JSON.stringify({ query, mode: activeMode }),
         });
 
         if (!response.ok) {

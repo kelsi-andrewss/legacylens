@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Compass, Gamepad2 } from "lucide-react";
-import ThemePicker from "@/components/ThemePicker";
 
 const navLinks = [
   { href: "/", label: "Explore", icon: Compass },
@@ -24,28 +23,25 @@ export default function Header() {
             RAG-powered LAPACK/BLAS explorer
           </p>
         </div>
-        <div className="flex items-center gap-4">
-          <nav className="flex gap-1">
-            {navLinks.map(({ href, label, icon: Icon }) => {
-              const isActive = pathname === href;
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                    isActive
-                      ? "bg-ll-primary-container text-ll-on-primary-container"
-                      : "text-ll-on-surface-muted hover:bg-ll-surface-tonal"
-                  }`}
-                >
-                  <Icon className="h-4 w-4" />
-                  {label}
-                </Link>
-              );
-            })}
-          </nav>
-          <ThemePicker />
-        </div>
+        <nav className="flex gap-1">
+          {navLinks.map(({ href, label, icon: Icon }) => {
+            const isActive = pathname === href;
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                  isActive
+                    ? "bg-ll-primary-container text-ll-on-primary-container"
+                    : "text-ll-on-surface-muted hover:bg-ll-surface-tonal"
+                }`}
+              >
+                <Icon className="h-4 w-4" />
+                {label}
+              </Link>
+            );
+          })}
+        </nav>
       </div>
     </header>
   );
