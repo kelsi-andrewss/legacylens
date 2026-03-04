@@ -355,7 +355,20 @@ body {
   cursor: not-allowed;
 }
 
-<<<<<<< HEAD
+/* ── Joy: Ghost-Map Focus Effect ── */
+[data-theme="joy"] .ghost-map-item {
+  transition: opacity 300ms ease;
+}
+
+[data-theme="joy"] .ghost-map-container:hover .ghost-map-item {
+  opacity: 0.4;
+  transition: opacity 300ms ease;
+}
+
+[data-theme="joy"] .ghost-map-container:hover .ghost-map-item:hover {
+  opacity: 1;
+}
+
 /* ── Joy: Snap-to-Focus Micro-Interactions ── */
 @keyframes specular-glow {
   0%, 100% {
