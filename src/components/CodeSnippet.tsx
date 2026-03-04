@@ -30,6 +30,7 @@ interface CodeSnippetProps {
 export default function CodeSnippet({ chunk }: CodeSnippetProps) {
   const { metadata: m, score } = chunk;
   const relevance = (score * 100).toFixed(1);
+  const githubUrl = `https://github.com/Reference-LAPACK/lapack/blob/master/${m.file_path}#L${m.line_start}`;
 
   return (
     <div className="rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900 overflow-hidden">
@@ -51,15 +52,25 @@ export default function CodeSnippet({ chunk }: CodeSnippetProps) {
             </span>
           )}
         </div>
-        <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-          score > 0.8
-            ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
-            : score > 0.6
-              ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300"
-              : "bg-zinc-100 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-400"
-        }`}>
-          {relevance}% match
-        </span>
+        <div className="flex items-center gap-3">
+          <a
+            href={githubUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors"
+          >
+            View on GitHub ↗
+          </a>
+          <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+            score > 0.8
+              ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+              : score > 0.6
+                ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300"
+                : "bg-zinc-100 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-400"
+          }`}>
+            {relevance}% match
+          </span>
+        </div>
       </div>
 
       <div className="px-4 py-2 text-xs text-zinc-500 dark:text-zinc-400 flex flex-wrap gap-x-4 gap-y-1 border-b border-zinc-100 dark:border-zinc-800">
