@@ -1,12 +1,13 @@
 "use client";
 
+import { HelpCircle } from "lucide-react";
 import { type Lens } from "@/lib/prompts";
 
 interface ModeSelectorProps {
   mode: string;
   onModeChange: (mode: string) => void;
-  lens?: Lens;
-  onLensChange?: (lens: Lens | undefined) => void;
+  lens: Lens;
+  onLensChange?: (lens: Lens) => void;
 }
 
 const MODES = [
@@ -26,7 +27,7 @@ export default function ModeSelector({ mode, onModeChange, lens, onLensChange }:
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-col gap-2">
-        <span className="text-xs font-semibold uppercase tracking-wider text-ll-on-surface-muted">Analysis mode:</span>
+        <span className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-ll-on-surface-muted">Analysis mode: <HelpCircle className="w-3.5 h-3.5 cursor-help" title="Analysis mode defines the output format: how the answer is structured and what it focuses on." /></span>
         <div className="flex flex-wrap gap-2">
           {MODES.map((m) => (
             <button
@@ -46,12 +47,12 @@ export default function ModeSelector({ mode, onModeChange, lens, onLensChange }:
       </div>
 
       <div className="flex flex-col gap-2">
-        <span className="text-xs font-semibold uppercase tracking-wider text-ll-on-surface-muted">Lens:</span>
+        <span className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wider text-ll-on-surface-muted">Lens: <HelpCircle className="w-3.5 h-3.5 cursor-help" title="Lens filters the technical perspective: Porter focuses on portability, Debugger on failure modes, Learner on concepts." /></span>
         <div className="flex flex-wrap gap-2">
           {LENSES.map((l) => (
             <button
               key={l.id}
-              onClick={() => onLensChange?.(lens === l.id ? undefined : l.id)}
+              onClick={() => onLensChange?.(l.id)}
               className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
                 lens === l.id
                   ? "bg-ll-secondary text-ll-on-primary"
