@@ -29,8 +29,8 @@ function loadPinnedItems(): PinnedItem[] {
 export default function Home() {
   const [messages, setMessages] = useState<{ role: 'user' | 'assistant'; content: string }[]>([]);
   const [mode, setMode] = useState("explain");
-  const [lens, setLens] = useState<Lens | undefined>(undefined);
-  const lensRef = useRef<Lens | undefined>(undefined);
+  const [lens, setLens] = useState<Lens>('porter');
+  const lensRef = useRef<Lens>('porter');
   const [answer, setAnswer] = useState("");
   const [chunks, setChunks] = useState<ChunkData[]>([]);
   const [lastQuery, setLastQuery] = useState("");
@@ -52,7 +52,7 @@ export default function Home() {
     setHasUnseen(hasUnseenDiscoveries());
   }, []);
 
-  const handleLensChange = useCallback((newLens: Lens | undefined) => {
+  const handleLensChange = useCallback((newLens: Lens) => {
     setLens(newLens);
     lensRef.current = newLens;
   }, []);

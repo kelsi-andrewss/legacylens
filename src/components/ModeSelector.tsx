@@ -5,8 +5,8 @@ import { type Lens } from "@/lib/prompts";
 interface ModeSelectorProps {
   mode: string;
   onModeChange: (mode: string) => void;
-  lens?: Lens;
-  onLensChange?: (lens: Lens | undefined) => void;
+  lens: Lens;
+  onLensChange?: (lens: Lens) => void;
 }
 
 const MODES = [
@@ -51,7 +51,7 @@ export default function ModeSelector({ mode, onModeChange, lens, onLensChange }:
           {LENSES.map((l) => (
             <button
               key={l.id}
-              onClick={() => onLensChange?.(lens === l.id ? undefined : l.id)}
+              onClick={() => onLensChange?.(l.id)}
               className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
                 lens === l.id
                   ? "bg-ll-secondary text-ll-on-primary"
