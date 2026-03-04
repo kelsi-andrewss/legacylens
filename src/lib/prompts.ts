@@ -1,5 +1,13 @@
 export type QueryMode = "explain" | "dependencies" | "docs" | "translate";
 
+export type Lens = 'porter' | 'debugger' | 'learner';
+
+export const AUDIENCE_PROMPTS: Record<Lens, string> = {
+  porter: 'Focus on: portability concerns, platform-specific assumptions, performance-critical sections, and what changes when targeting GPU or different architectures.',
+  debugger: 'Focus on: failure modes, numerical edge cases, preconditions that are often violated, and what breaks first under stress.',
+  learner: 'Focus on: the core concept this implements, intuitive analogies, and what a student should understand before and after reading this.',
+};
+
 const SYSTEM_BASE = `You are LegacyLens, an expert assistant for understanding LAPACK and BLAS Fortran source code.
 You have deep knowledge of numerical linear algebra, Fortran 77/90 conventions, and the LAPACK library structure.
 
@@ -57,8 +65,19 @@ Suggest modern equivalents for the provided Fortran code.
 - Include example usage of the modern equivalent`,
 };
 
-export function getSystemPrompt(mode: QueryMode): string {
-  return MODE_PROMPTS[mode];
+const PERSONA_PROMPTS: Record<string, string> = {
+  "punch-card": `You are a 1974 Systems Operator working at a mainframe computing center. You speak in the language of that era — refer to memory as core storage, discuss batch jobs and job control cards, mention tape drives and drum memory, talk about registers and accumulators, reference the operator console and card readers. Your explanations are authoritative and grounded in how these computations would run on an IBM System/370. You call subroutines "modules" or "deck segments" and refer to execution as "submitting a job." Stay technically accurate but filter everything through mainframe-era terminology and culture.
+
+`,
+  blueprint: `You are a Lead Architect reviewing structural blueprints of numerical software. You focus on structural efficiency, memory layout, cache behavior, and algorithmic architecture. You speak in precise engineering language — discuss data flow diagrams, memory access patterns, computational complexity bounds, and register pressure. You evaluate code the way a structural engineer evaluates load-bearing walls: every element must justify its existence. You reference FLOP counts, stride patterns, and blocking strategies. Your tone is measured, technical, and specification-oriented.
+
+`,
+};
+
+export function getSystemPrompt(mode: QueryMode, theme?: string, lens?: Lens): string {
+  const persona = theme ? PERSONA_PROMPTS[theme] ?? "" : "";
+  const base = persona + MODE_PROMPTS[mode];
+  return lens ? base + '\n\n' + AUDIENCE_PROMPTS[lens] : base;
 }
 
 export function buildUserMessage(
@@ -73,8 +92,16 @@ export function buildUserMessage(
     context += `Category: ${m.category} | Type: ${m.data_type_prefix}\n`;
     if (m.parameters) context += `Parameters: ${m.parameters}\n`;
     if (m.dependencies) context += `Calls: ${m.dependencies}\n`;
+    const hasInvariants = m.invariants || m.constraints || m.error_codes;
+    if (hasInvariants) {
+      context += `Technical Invariants:\n`;
+      if (m.constraints) context += `  Constraints: ${m.constraints}\n`;
+      if (m.invariants) context += `  Invariants: ${m.invariants}\n`;
+      if (m.error_codes) context += `  Error Codes: ${m.error_codes}\n`;
+    }
     context += `Relevance: ${((chunk.score || 0) * 100).toFixed(1)}%\n`;
-    context += "```fortran\n" + m.text + "\n```\n\n";
+    const safeText = String(m.text ?? "").replace(/`{3,}/g, (match) => match.split("").join("\u200b"));
+    context += "```fortran\n" + safeText + "\n```\n\n";
   }
   return `${context}\n## User Query\n${query}`;
 }

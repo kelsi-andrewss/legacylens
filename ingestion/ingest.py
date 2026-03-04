@@ -1,5 +1,6 @@
 """Ingestion pipeline: parse LAPACK, embed, upsert to Pinecone."""
 
+import argparse
 import json
 import os
 import sys
@@ -104,6 +105,11 @@ def make_chunk_id(routine: FortranRoutine, chunk_idx: int = 0) -> str:
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Ingest LAPACK into Pinecone.")
+    parser.add_argument("--skip-sleep", action="store_true", help="Force skip all inter-batch sleeps regardless of cache hits.")
+    parser.add_argument("--dry-run", action="store_true", help="Parse and chunk without embedding or upserting.")
+    args = parser.parse_args()
+
     lapack_path = Path(__file__).parent.parent / "data" / "lapack"
     if not lapack_path.exists():
         print(f"LAPACK source not found at {lapack_path}")
@@ -140,9 +146,16 @@ def main():
                 "data_type_prefix": routine.data_type_prefix,
                 "category": routine.category,
                 "text": part[:9500],  # Pinecone metadata text limit
+                "invariants": routine.invariants[:500],
+                "constraints": routine.constraints[:500],
+                "error_codes": routine.error_codes[:500],
             }
             chunks.append((chunk_id, part, metadata))
     print(f"Created {len(chunks)} chunks")
+
+    if args.dry_run:
+        print("Dry run complete. Skipping embedding and upsert.")
+        return
 
     # Embed
     print("Embedding chunks...")
@@ -164,21 +177,31 @@ def main():
         texts = [text for _, text in batch]
         print(f"  Embedding batch {batch_start // BATCH_SIZE + 1}/{(len(to_embed) + BATCH_SIZE - 1) // BATCH_SIZE}...")
 
-        try:
-            batch_embeddings = embed_batch(texts)
-        except Exception as e:
-            print(f"  Error embedding batch: {e}")
-            print("  Retrying in 10s...")
-            time.sleep(10)
-            batch_embeddings = embed_batch(texts)
+        batch_num = batch_start // BATCH_SIZE + 1
+        batch_embeddings = None
+        for attempt, delay in enumerate([2, 4, 8], start=1):
+            try:
+                batch_embeddings = embed_batch(texts)
+                break
+            except Exception as e:
+                chunk_ids = [chunks[idx][0] for idx, _ in batch]
+                print(f"  Batch {batch_num} failed (attempt {attempt}/3): {e}")
+                print(f"  Failing chunk IDs: {chunk_ids}")
+                if attempt < 3:
+                    print(f"  Retrying in {delay}s...")
+                    time.sleep(delay)
+        if batch_embeddings is None:
+            print(f"  Batch {batch_num} failed after 3 attempts. Skipping.")
+            print(f"  Resume hint: clear cache entries for the above IDs and re-run.")
+            continue
 
         for (idx, _), emb in zip(batch, batch_embeddings):
             chunk_id = chunks[idx][0]
             embeddings[chunk_id] = emb
             save_to_cache(chunk_id, emb)
 
-        # Rate limit courtesy
-        if batch_start + BATCH_SIZE < len(to_embed):
+        # Rate limit courtesy — skip if --skip-sleep passed (all-cache-hit runs never reach this loop)
+        if not args.skip_sleep and batch_start + BATCH_SIZE < len(to_embed):
             time.sleep(2)
 
     print(f"All {len(embeddings)} embeddings ready")
@@ -200,8 +223,15 @@ def main():
     upsert_batch_size = 100
     for batch_start in range(0, len(vectors), upsert_batch_size):
         batch = vectors[batch_start : batch_start + upsert_batch_size]
-        print(f"  Upserting batch {batch_start // upsert_batch_size + 1}/{(len(vectors) + upsert_batch_size - 1) // upsert_batch_size}...")
-        index.upsert(vectors=batch)
+        upsert_num = batch_start // upsert_batch_size + 1
+        total_upsert_batches = (len(vectors) + upsert_batch_size - 1) // upsert_batch_size
+        print(f"  Upserting batch {upsert_num}/{total_upsert_batches}...")
+        try:
+            index.upsert(vectors=batch)
+        except Exception as e:
+            print(f"  ERROR: Pinecone upsert failed on batch {upsert_num}/{total_upsert_batches}: {e}")
+            print(f"  {batch_start} of {len(vectors)} vectors upserted before failure.")
+            raise
 
     # Verify
     stats = index.describe_index_stats()

@@ -1,26 +1,257 @@
 @import "tailwindcss";
 
+/* ── Z-index scale ── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --z-decoration: -1;
+  --z-content: 0;
+  --z-float: 10;
+  --z-sticky: 30;
+  --z-dropdown: 40;
+  --z-toast: 50;
 }
 
+/* ── SSR fallback: Joy theme defaults ── */
+:root {
+  --ll-surface: #1a1a2e;
+  --ll-surface-variant: #1e2240;
+  --ll-surface-tonal: #232850;
+  --ll-primary: #00d4ff;
+  --ll-secondary: #ffb347;
+  --ll-on-surface: #e8e6f0;
+  --ll-on-surface-muted: #8b89a0;
+  --ll-on-primary: #0a0a1a;
+  --ll-on-primary-container: #66e5ff;
+  --ll-primary-container: #0d3345;
+  --ll-outline: #3d3b56;
+  --ll-radius-sm: 4px;
+  --ll-radius-md: 8px;
+  --ll-radius-lg: 12px;
+  --ll-font-display: var(--font-inter);
+  --ll-font-body: var(--font-inter);
+  --ll-font-mono: var(--font-jetbrains-mono);
+  --ll-primary-hover: #00b8d9;
+  --ll-primary-faint: #0a2a3a;
+  --ll-primary-muted: #0099b8;
+  --ll-on-surface-hover: #f0eef8;
+}
+
+/* ── Tailwind v4 bridge ── */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-ll-surface: var(--ll-surface);
+  --color-ll-surface-variant: var(--ll-surface-variant);
+  --color-ll-surface-tonal: var(--ll-surface-tonal);
+  --color-ll-primary: var(--ll-primary);
+  --color-ll-secondary: var(--ll-secondary);
+  --color-ll-on-surface: var(--ll-on-surface);
+  --color-ll-on-surface-muted: var(--ll-on-surface-muted);
+  --color-ll-on-primary: var(--ll-on-primary);
+  --color-ll-on-primary-container: var(--ll-on-primary-container);
+  --color-ll-primary-container: var(--ll-primary-container);
+  --color-ll-outline: var(--ll-outline);
+  --color-ll-primary-hover: var(--ll-primary-hover);
+  --color-ll-primary-faint: var(--ll-primary-faint);
+  --color-ll-primary-muted: var(--ll-primary-muted);
+  --color-ll-on-surface-hover: var(--ll-on-surface-hover);
+  --radius-ll-sm: var(--ll-radius-sm);
+  --radius-ll-md: var(--ll-radius-md);
+  --radius-ll-lg: var(--ll-radius-lg);
+  --font-ll-display: var(--ll-font-display);
+  --font-ll-body: var(--ll-font-body);
+  --font-ll-mono: var(--ll-font-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ── Global theme transition ── */
+*,
+*::before,
+*::after {
+  transition: background-color 200ms, border-color 200ms, color 200ms;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: linear-gradient(145deg, #1a1a2e 0%, #16213e 100%);
+  color: var(--ll-on-surface);
+}
+
+/* === Theme Flourishes === */
+
+/* Base header stacking context — keeps ThemePicker dropdown above main content */
+.theme-header {
+  position: relative;
+  z-index: var(--z-sticky);
+  background: var(--ll-surface-variant);
+  border-bottom: 3px solid;
+  border-image: linear-gradient(90deg, #00d4ff, #ff006e) 1;
+}
+
+.theme-header a.text-2xl {
+  background: linear-gradient(90deg, #00d4ff, #7b61ff, #ff006e);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ── Ghost-Map Focus Effect ── */
+.ghost-map-item {
+  transition: opacity 300ms ease;
+}
+
+.ghost-map-container:hover .ghost-map-item {
+  opacity: 0.4;
+  transition: opacity 300ms ease;
+}
+
+.ghost-map-container:hover .ghost-map-item:hover {
+  opacity: 1;
+}
+
+/* ── Snap-to-Focus Micro-Interactions ── */
+@keyframes specular-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 rgba(0, 212, 255, 0);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.15);
+  }
+}
+
+.snap-focus {
+  transition:
+    transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 300ms ease,
+    opacity 200ms ease;
+}
+
+.snap-focus:hover {
+  transform: scale(1.005);
+  box-shadow: 0 0 24px rgba(0, 212, 255, 0.12);
+}
+
+/* ── Semantic Tracers ── */
+.semantic-tracer-inline {
+  cursor: pointer;
+  transition: background-color 150ms, border-color 150ms;
+  border-bottom: 2px solid transparent;
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+.semantic-tracer-inline:hover,
+.semantic-tracer-inline[data-tracer-active] {
+  background: rgba(0, 212, 255, 0.15);
+  border-bottom-color: #00d4ff;
+}
+
+.semantic-tracer-badge {
+  cursor: pointer;
+  transition: color 150ms;
+}
+
+.semantic-tracer-badge:hover {
+  color: #00d4ff;
+}
+
+.semantic-tracer-card {
+  transition: box-shadow 150ms;
+}
+
+.semantic-tracer-card[data-tracer-active] {
+  box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.4);
+}
+
+/* ── Reveal/Unlocking Transitions ── */
+@keyframes reveal-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.reveal-enter {
+  animation: reveal-enter 400ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.warm-streaming-glow {
+  text-shadow: 0 0 12px rgba(255, 179, 71, 0.3);
+}
+
+/* ── Archive button notification bubble ── */
+@keyframes archive-glow {
+  0%, 100% {
+    box-shadow:
+      0 0 4px var(--ll-primary),
+      0 0 8px var(--ll-primary),
+      0 0 16px var(--ll-primary);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow:
+      0 0 8px var(--ll-primary),
+      0 0 20px var(--ll-primary),
+      0 0 32px var(--ll-primary);
+    transform: scale(1.15);
+  }
+}
+
+.notification-bubble-shimmer {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--ll-primary);
+  animation: archive-glow 1.4s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+/* ── Tooltip utility ── */
+[data-tooltip] {
+  position: relative;
+}
+
+[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--ll-surface-tonal);
+  color: var(--ll-on-surface);
+  border: 1px solid var(--ll-outline);
+  border-radius: var(--ll-radius-sm);
+  padding: 0.375rem 0.5rem;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  white-space: normal;
+  max-width: 14rem;
+  text-align: center;
+  z-index: var(--z-dropdown);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 150ms ease-out;
+  width: max-content;
+}
+
+[data-tooltip]:hover::after {
+  opacity: 1;
+}
+
+/* ── Archive button redesign ── */
+.archive-btn {
+  background: linear-gradient(135deg, var(--ll-surface-tonal, #1e1e2e) 0%, var(--ll-surface, #13131f) 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), inset 0 -1px 0 rgba(0,0,0,0.15), 0 1px 3px rgba(0,0,0,0.2);
+  border: 1px solid var(--ll-primary);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+}
+.archive-btn:hover {
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), inset 0 -1px 0 rgba(0,0,0,0.15), 0 0 0 2px var(--ll-primary), 0 2px 8px rgba(0,0,0,0.25);
+  border-color: var(--ll-primary);
+}
+.archive-btn-active {
+  background: var(--ll-primary-container, #2a1a4a);
+  color: var(--ll-on-primary-container);
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+  border: 1px solid var(--ll-primary);
 }

@@ -1,56 +1,53 @@
 # LegacyLens
 
-**RAG-powered explorer for legacy Fortran codebases**
+LegacyLens — RAG-powered explorer for LAPACK/BLAS Fortran source. Ask questions about numerical routines; get answers grounded in real source code.
 
-Ask natural language questions about 600K+ lines of LAPACK/BLAS Fortran source code. LegacyLens retrieves relevant subroutines with syntax highlighting, file/line citations, and LLM-generated explanations.
+**Deployed:** https://legacylens-b06nvam8b-kelsiandrews-3963s-projects.vercel.app
 
-**Live demo:** https://legacylens-b06nvam8b-kelsiandrews-3963s-projects.vercel.app
+## Features
 
-## What it does
-
-- Semantic search across 7,759 chunks from 2,317 LAPACK/BLAS subroutines
-- 4 query modes: Explain, Dependencies, Documentation, Translation hints
-- Streaming answers with citations in `[SOURCE: file.f:L42-L87]` format
-- Filter by category (LAPACK/BLAS) and data type (S/D/C/Z)
+- Natural language RAG explorer with 4 query modes: Explain, Dependencies, Docs, Translate
+- Dependency graph visualization
+- Lens overlays for different perspectives
+- Conversation history
+- Mini-games: Routine Roulette, Similarity Showdown, Personality Quiz
 
 ## Tech stack
 
-- **Vector DB:** Pinecone (cosine similarity, 1536 dims)
-- **Embeddings:** OpenAI text-embedding-3-small
+- **Frontend:** Next.js, Tailwind CSS
+- **Embeddings:** OpenAI `text-embedding-3-small`
 - **LLM:** GPT-4o-mini (streaming)
-- **Frontend:** Next.js 16, Tailwind CSS
+- **Vector DB:** Pinecone (7,759 vectors, 2,329 Fortran files)
 - **Ingestion:** Custom Python Fortran parser
 
-## Setup
+## Configuration
 
-### Prerequisites
-- Node.js 20+
-- Python 3.9+
-- OpenAI API key
-- Pinecone API key
+Create `.env.local` at the project root:
 
-### Local development
-
-```bash
-git clone https://github.com/kelsi-andrewss/legacylens
-cd legacylens
-npm install
-```
-
-Create `.env.local`:
 ```
 OPENAI_API_KEY=your_key
 PINECONE_API_KEY=your_key
 PINECONE_INDEX=legacylens
 ```
 
+- `OPENAI_API_KEY` — OpenAI API key (embeddings + chat)
+- `PINECONE_API_KEY` — Pinecone API key
+- `PINECONE_INDEX` — Pinecone index name (default: `legacylens`)
+
+## Local Development
+
+Node 18+ required.
+
 ```bash
+git clone https://github.com/kelsi-andrewss/legacylens
+cd legacylens
+npm install
 npm run dev
 ```
 
 Open http://localhost:3000
 
-### Ingestion
+## Data Ingestion
 
 Clone LAPACK source and run the ingestion pipeline:
 
@@ -61,7 +58,7 @@ pip install -r requirements.txt
 python ingest.py
 ```
 
-Ingestion takes ~10 minutes on first run. Results are cached in `ingestion/cache/` — subsequent runs skip already-embedded chunks.
+Re-runs use the embedding cache automatically — only new or changed files call the OpenAI embeddings API. Use `--dry-run` to test parsing without making any API calls.
 
 ## Architecture
 
