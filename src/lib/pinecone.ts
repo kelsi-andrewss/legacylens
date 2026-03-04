@@ -23,6 +23,9 @@ export interface ChunkMetadata {
   data_type_prefix: string;
   category: string;
   text: string;
+  invariants?: string;
+  constraints?: string;
+  error_codes?: string;
 }
 
 export async function queryPinecone(
