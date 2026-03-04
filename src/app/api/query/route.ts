@@ -1,5 +1,5 @@
 import { NextRequest, after } from "next/server";
-import { embedQuery, getOpenAI } from "@/lib/openai";
+import { embedQuery, getOpenAI, generateHypotheticalDocument } from "@/lib/openai";
 import { queryPinecone, fetchRoutinesByNames, upsertSyntheticChunk } from "@/lib/pinecone";
 import { QueryMode, Lens, getSystemPrompt, buildUserMessage } from "@/lib/prompts";
 import { CHAT_MODEL, TEMPERATURE, MAX_TOKENS, DEFAULT_TOP_K, GRAPH_EXPANSION_MAX_CHUNKS, MIN_SCORE_THRESHOLD } from "@/lib/config";
@@ -50,8 +50,17 @@ export async function POST(req: NextRequest) {
       pineconeFilter.subroutine_name = { $in: nameTokens };
     }
 
-    // Embed query
-    const embedding = await embedQuery(sanitizedQuery);
+    // Embed query — use HyDE for natural language queries with no detected routine names
+    let textToEmbed = sanitizedQuery;
+    if (nameTokens.length === 0) {
+      try {
+        const hydeDoc = await generateHypotheticalDocument(sanitizedQuery);
+        if (hydeDoc) textToEmbed = hydeDoc;
+      } catch {
+        // fallback: textToEmbed stays as sanitizedQuery
+      }
+    }
+    const embedding = await embedQuery(textToEmbed);
     const embedMs = Date.now() - t0;
 
     // Search Pinecone — synthetic chunks included only for explain mode (most benefit from cached context).
