@@ -32,13 +32,13 @@ export default function SearchBar({ onSearch, isLoading, externalQuery }: Search
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Ask about LAPACK code... e.g., 'What does DGESV do?'"
-          className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 pr-24 text-zinc-900 placeholder-zinc-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder-zinc-500"
+          className="w-full rounded-lg border border-ll-outline bg-ll-surface-variant px-4 py-3 pr-24 text-ll-on-surface placeholder-ll-on-surface-muted shadow-sm focus:border-ll-primary focus:outline-none focus:ring-2 focus:ring-ll-primary/20"
           disabled={isLoading}
         />
         <button
           type="submit"
           disabled={isLoading || !query.trim()}
-          className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md bg-blue-600 px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md bg-ll-primary px-4 py-1.5 text-sm font-medium text-ll-on-primary transition-colors hover:bg-ll-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isLoading ? "Searching..." : "Search"}
         </button>

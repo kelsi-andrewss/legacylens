@@ -36,12 +36,12 @@ function RoutineCard({ routine }: { routine: Routine }) {
       : "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300";
 
   return (
-    <div className="flex-1 min-w-0 rounded-lg border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900 overflow-hidden">
-      <div className="flex items-center gap-2 flex-wrap border-b border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-800/50">
-        <span className="font-mono text-sm font-bold text-zinc-900 dark:text-zinc-100">
+    <div className="flex-1 min-w-0 rounded-lg border border-ll-outline bg-ll-surface-variant shadow-sm overflow-hidden">
+      <div className="flex items-center gap-2 flex-wrap border-b border-ll-outline bg-ll-surface-tonal px-4 py-3">
+        <span className="font-mono text-sm font-bold text-ll-on-surface">
           {m.subroutine_name}
         </span>
-        <span className="rounded-full bg-zinc-200 px-2 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-700 dark:text-zinc-400">
+        <span className="rounded-full bg-ll-surface-tonal px-2 py-0.5 text-xs font-medium text-ll-on-surface-muted">
           {m.kind}
         </span>
         <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${categoryStyle}`}>
@@ -49,7 +49,7 @@ function RoutineCard({ routine }: { routine: Routine }) {
         </span>
       </div>
       <div className="px-4 py-3">
-        <pre className="font-mono text-xs text-zinc-600 dark:text-zinc-400 whitespace-pre-wrap break-all leading-relaxed">
+        <pre className="font-mono text-xs text-ll-on-surface-muted whitespace-pre-wrap break-all leading-relaxed">
           {getCodePreview(m.text)}
         </pre>
       </div>
@@ -184,13 +184,13 @@ export default function SimilarityShowdown() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">
+        <h2 className="text-xl font-bold text-ll-on-surface">
           Similarity Showdown
         </h2>
-        <div className="flex items-center gap-4 text-sm font-medium text-zinc-600 dark:text-zinc-400">
+        <div className="flex items-center gap-4 text-sm font-medium text-ll-on-surface-muted">
           <span>
             Streak:{" "}
-            <span className="text-blue-600 dark:text-blue-400">{streak}</span>
+            <span className="text-ll-primary">{streak}</span>
           </span>
           <span>
             High Score:{" "}
@@ -201,7 +201,7 @@ export default function SimilarityShowdown() {
         </div>
       </div>
 
-      <p className="text-sm text-zinc-500 dark:text-zinc-400">
+      <p className="text-sm text-ll-on-surface-muted">
         Two LAPACK/BLAS routines appear below. Guess whether their cosine
         similarity is <strong>higher</strong> or <strong>lower</strong> than{" "}
         {THRESHOLD}%.
@@ -214,7 +214,7 @@ export default function SimilarityShowdown() {
           <RoutineCard routine={routineB} />
         </div>
       ) : (
-        <div className="flex items-center justify-center py-12 text-zinc-400">
+        <div className="flex items-center justify-center py-12 text-ll-on-surface-muted">
           Loading routines...
         </div>
       )}
@@ -225,14 +225,14 @@ export default function SimilarityShowdown() {
           <button
             onClick={() => handleGuess(true)}
             disabled={loading}
-            className="rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="rounded-lg bg-ll-primary px-6 py-2.5 text-sm font-semibold text-ll-on-primary shadow-sm hover:bg-ll-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             Higher than {THRESHOLD}%?
           </button>
           <button
             onClick={() => handleGuess(false)}
             disabled={loading}
-            className="rounded-lg bg-zinc-700 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-zinc-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="rounded-lg bg-ll-surface-tonal px-6 py-2.5 text-sm font-semibold text-ll-on-surface shadow-sm hover:bg-ll-outline disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             Lower than {THRESHOLD}%?
           </button>
@@ -242,7 +242,7 @@ export default function SimilarityShowdown() {
       {/* Animated score reveal */}
       {revealed && (
         <div className="flex flex-col items-center gap-3">
-          <div className="text-4xl font-bold font-mono text-zinc-900 dark:text-zinc-100">
+          <div className="text-4xl font-bold font-mono text-ll-on-surface">
             {displayScore}%
           </div>
 
@@ -257,7 +257,7 @@ export default function SimilarityShowdown() {
               <div className="text-lg font-semibold text-red-600 dark:text-red-400">
                 Wrong!
               </div>
-              <div className="text-sm text-zinc-500 dark:text-zinc-400">
+              <div className="text-sm text-ll-on-surface-muted">
                 Game Over! Streak: {streakRef.current} | High Score:{" "}
                 {highScoreRef.current}
               </div>
@@ -267,7 +267,7 @@ export default function SimilarityShowdown() {
           {result && (
             <button
               onClick={fetchPair}
-              className="mt-2 rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 transition-colors"
+              className="mt-2 rounded-lg bg-ll-primary px-6 py-2.5 text-sm font-semibold text-ll-on-primary shadow-sm hover:bg-ll-primary/90 transition-colors"
             >
               Next Round
             </button>

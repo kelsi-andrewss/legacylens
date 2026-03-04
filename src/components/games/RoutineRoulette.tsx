@@ -183,13 +183,13 @@ export default function RoutineRoulette() {
         <div className="relative flex items-center justify-center">
           {/* Outer decorative ring */}
           <div
-            className={`absolute h-40 w-40 rounded-full border-4 border-dashed border-blue-300 dark:border-blue-700 ${
+            className={`absolute h-40 w-40 rounded-full border-4 border-dashed border-ll-primary/40 ${
               spinning ? "animate-spin" : ""
             }`}
           />
           {/* Inner decorative ring */}
           <div
-            className={`absolute h-36 w-36 rounded-full border-2 border-blue-200 dark:border-blue-800 ${
+            className={`absolute h-36 w-36 rounded-full border-2 border-ll-primary/20 ${
               spinning ? "animate-spin [animation-direction:reverse]" : ""
             }`}
           />
@@ -197,7 +197,7 @@ export default function RoutineRoulette() {
           {!routine && !spinning ? (
             <button
               onClick={handleSpin}
-              className="relative z-10 flex h-32 w-32 items-center justify-center rounded-full bg-blue-600 text-xl font-bold text-white shadow-lg transition-transform hover:scale-105 hover:bg-blue-700 active:scale-95"
+              className="relative z-10 flex h-32 w-32 items-center justify-center rounded-full bg-ll-primary text-xl font-bold text-ll-on-primary shadow-lg transition-transform hover:scale-105 hover:bg-ll-primary/90 active:scale-95"
             >
               SPIN
             </button>
@@ -205,8 +205,8 @@ export default function RoutineRoulette() {
             <div
               className={`relative z-10 flex h-32 w-32 items-center justify-center rounded-full ${
                 spinning
-                  ? "bg-blue-500 shadow-blue-500/30 shadow-xl"
-                  : "bg-zinc-800 dark:bg-zinc-700"
+                  ? "bg-ll-primary shadow-ll-primary/30 shadow-xl"
+                  : "bg-ll-surface-tonal"
               }`}
             >
               <span
@@ -222,13 +222,13 @@ export default function RoutineRoulette() {
 
         {/* Subtitle */}
         {!routine && !spinning && (
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+          <p className="text-sm text-ll-on-surface-muted">
             Discover a random LAPACK/BLAS routine
           </p>
         )}
 
         {spinning && (
-          <p className="text-sm font-medium text-blue-500 animate-pulse">
+          <p className="text-sm font-medium text-ll-primary animate-pulse">
             Finding a routine...
           </p>
         )}
@@ -238,12 +238,12 @@ export default function RoutineRoulette() {
       {routine && (
         <div className="space-y-6">
           {/* Routine header */}
-          <div className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+          <div className="rounded-lg border border-ll-outline bg-ll-surface-variant p-6 shadow-sm">
             <div className="flex flex-wrap items-center gap-3">
-              <h2 className="font-mono text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+              <h2 className="font-mono text-2xl font-bold text-ll-on-surface">
                 {routine.metadata.subroutine_name}
               </h2>
-              <span className="rounded-full bg-zinc-200 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-700 dark:text-zinc-400">
+              <span className="rounded-full bg-ll-surface-tonal px-2.5 py-0.5 text-xs font-medium text-ll-on-surface-muted">
                 {routine.metadata.kind}
               </span>
               <span
@@ -256,21 +256,21 @@ export default function RoutineRoulette() {
                 {routine.metadata.category}
               </span>
               {routine.metadata.data_type_prefix && (
-                <span className="rounded-full bg-zinc-200 px-2.5 py-0.5 text-xs font-medium text-zinc-600 dark:bg-zinc-700 dark:text-zinc-400">
+                <span className="rounded-full bg-ll-surface-tonal px-2.5 py-0.5 text-xs font-medium text-ll-on-surface-muted">
                   {routine.metadata.data_type_prefix}
                 </span>
               )}
             </div>
-            <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
+            <p className="mt-2 text-sm text-ll-on-surface-muted">
               {routine.metadata.file_path}:{routine.metadata.line_start}-{routine.metadata.line_end}
             </p>
             {routine.metadata.parameters && (
-              <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+              <p className="mt-1 text-sm text-ll-on-surface-muted">
                 Parameters: <span className="font-mono text-xs">{routine.metadata.parameters}</span>
               </p>
             )}
             {routine.metadata.dependencies && (
-              <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+              <p className="mt-1 text-sm text-ll-on-surface-muted">
                 Calls: <span className="font-mono text-xs">{routine.metadata.dependencies}</span>
               </p>
             )}
@@ -285,7 +285,7 @@ export default function RoutineRoulette() {
 
           {/* Streamed explanation */}
           <div>
-            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-ll-on-surface-muted">
               Explanation
             </h3>
             <AnswerStream content={answer} isStreaming={isLoading} />
@@ -294,7 +294,7 @@ export default function RoutineRoulette() {
           {/* Code chunks from RAG */}
           {chunks.length > 0 && (
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-ll-on-surface-muted">
                 Related Code ({chunks.length} chunks)
               </h3>
               {chunks.map((chunk) => (
@@ -308,7 +308,7 @@ export default function RoutineRoulette() {
             <button
               onClick={handleSpinAgain}
               disabled={spinning}
-              className="rounded-full bg-blue-600 px-8 py-3 font-semibold text-white shadow transition-transform hover:scale-105 hover:bg-blue-700 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
+              className="rounded-full bg-ll-primary px-8 py-3 font-semibold text-ll-on-primary shadow transition-transform hover:scale-105 hover:bg-ll-primary/90 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
             >
               Spin Again
             </button>

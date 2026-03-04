@@ -163,7 +163,7 @@ export default function ConnectionsGame() {
     return (
       <div className="flex flex-col items-center gap-4 py-8">
         <h2 className="text-xl font-bold">All puzzles completed!</h2>
-        <p className="text-zinc-500 dark:text-zinc-400">
+        <p className="text-ll-on-surface-muted">
           You've solved every LAPACK Connections puzzle. Check back later for
           more.
         </p>
@@ -217,18 +217,18 @@ export default function ConnectionsGame() {
 
       <div className="text-center">
         <h2 className="text-xl font-bold mb-1">LAPACK Connections</h2>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">
+        <p className="text-sm text-ll-on-surface-muted">
           Group the 16 routines into 4 categories of 4
         </p>
       </div>
 
       {!gameOver && (
-        <div className="flex items-center gap-1.5 text-sm text-zinc-600 dark:text-zinc-400">
+        <div className="flex items-center gap-1.5 text-sm text-ll-on-surface-muted">
           <span>Mistakes remaining:</span>
           {mistakeDots.map((i) => (
             <span
               key={i}
-              className="inline-block w-2.5 h-2.5 rounded-full bg-zinc-800 dark:bg-zinc-200"
+              className="inline-block w-2.5 h-2.5 rounded-full bg-ll-on-surface"
             />
           ))}
         </div>
@@ -266,8 +266,8 @@ export default function ConnectionsGame() {
                 className={`rounded-md px-2 py-3 text-xs font-mono font-bold transition-colors
                   ${
                     isSelected
-                      ? "ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300"
-                      : "bg-zinc-200 dark:bg-zinc-700 text-zinc-800 dark:text-zinc-200 hover:bg-zinc-300 dark:hover:bg-zinc-600"
+                      ? "ring-2 ring-ll-primary bg-ll-primary-container text-ll-on-primary-container"
+                      : "bg-ll-surface-tonal text-ll-on-surface hover:bg-ll-outline"
                   }
                   disabled:opacity-50 disabled:cursor-not-allowed`}
               >
@@ -284,14 +284,14 @@ export default function ConnectionsGame() {
           <button
             onClick={deselectAll}
             disabled={selected.size === 0}
-            className="px-4 py-2 text-sm rounded-md border border-zinc-300 dark:border-zinc-600 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="px-4 py-2 text-sm rounded-md border border-ll-outline text-ll-on-surface hover:bg-ll-surface-tonal disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Deselect All
           </button>
           <button
             onClick={handleSubmit}
             disabled={selected.size !== 4}
-            className="px-4 py-2 text-sm rounded-md bg-zinc-800 dark:bg-zinc-200 text-white dark:text-zinc-900 font-medium hover:bg-zinc-700 dark:hover:bg-zinc-300 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="px-4 py-2 text-sm rounded-md bg-ll-on-surface text-ll-surface font-medium hover:bg-ll-on-surface/80 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Submit
           </button>
@@ -306,7 +306,7 @@ export default function ConnectionsGame() {
           </p>
           <button
             onClick={initPuzzle}
-            className="px-4 py-2 text-sm rounded-md bg-zinc-800 dark:bg-zinc-200 text-white dark:text-zinc-900 font-medium hover:bg-zinc-700 dark:hover:bg-zinc-300"
+            className="px-4 py-2 text-sm rounded-md bg-ll-on-surface text-ll-surface font-medium hover:bg-ll-on-surface/80"
           >
             New Puzzle
           </button>
