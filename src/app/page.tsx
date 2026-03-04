@@ -5,6 +5,8 @@ import SearchBar from "@/components/SearchBar";
 import ModeSelector from "@/components/ModeSelector";
 import AnswerStream from "@/components/AnswerStream";
 import CodeSnippet from "@/components/CodeSnippet";
+import Pokedex, { saveRoutineMeta } from "@/components/Pokedex";
+import { markDiscovered, isDiscovered, addXP } from "@/lib/pokedex";
 
 interface ChunkData {
   id: string;
@@ -31,6 +33,7 @@ export default function Home() {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
   const [exampleQuery, setExampleQuery] = useState<string | undefined>();
+  const [showPokedex, setShowPokedex] = useState(false);
 
   const handleSearch = useCallback(
     async (query: string, modeOverride?: string) => {
@@ -75,6 +78,17 @@ export default function Home() {
               const event = JSON.parse(json);
               if (event.type === "chunks") {
                 setChunks(event.data);
+                for (const chunk of event.data as ChunkData[]) {
+                  const name = chunk.metadata.subroutine_name;
+                  if (name) {
+                    const alreadyKnown = isDiscovered(name);
+                    markDiscovered(name);
+                    saveRoutineMeta(name, chunk.metadata.category, chunk.metadata.data_type_prefix);
+                    if (!alreadyKnown) {
+                      addXP(10);
+                    }
+                  }
+                }
               } else if (event.type === "text") {
                 setAnswer((prev) => prev + event.data);
               }
@@ -155,6 +169,23 @@ export default function Home() {
 
           {/* Main content */}
           <div className="min-w-0 flex-1 space-y-6">
+            <div className="flex items-center justify-end">
+              <button
+                onClick={() => setShowPokedex((prev) => !prev)}
+                className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                  showPokedex
+                    ? "bg-ll-primary-container text-ll-on-primary-container"
+                    : "border border-ll-outline text-ll-on-surface-muted hover:bg-ll-surface-tonal"
+                }`}
+              >
+                {showPokedex ? "Back to Search" : "Collection"}
+              </button>
+            </div>
+
+            {showPokedex ? (
+              <Pokedex />
+            ) : (
+            <>
             <SearchBar
               onSearch={handleSearch}
               isLoading={isLoading}
@@ -207,6 +238,8 @@ export default function Home() {
                   ))}
                 </div>
               </div>
+            )}
+            </>
             )}
           </div>
         </div>
