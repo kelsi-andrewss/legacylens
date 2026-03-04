@@ -1,5 +1,13 @@
 export type QueryMode = "explain" | "dependencies" | "docs" | "translate";
 
+export type Lens = 'porter' | 'debugger' | 'learner';
+
+export const AUDIENCE_PROMPTS: Record<Lens, string> = {
+  porter: 'Focus on: portability concerns, platform-specific assumptions, performance-critical sections, and what changes when targeting GPU or different architectures.',
+  debugger: 'Focus on: failure modes, numerical edge cases, preconditions that are often violated, and what breaks first under stress.',
+  learner: 'Focus on: the core concept this implements, intuitive analogies, and what a student should understand before and after reading this.',
+};
+
 const SYSTEM_BASE = `You are LegacyLens, an expert assistant for understanding LAPACK and BLAS Fortran source code.
 You have deep knowledge of numerical linear algebra, Fortran 77/90 conventions, and the LAPACK library structure.
 
@@ -66,9 +74,10 @@ const PERSONA_PROMPTS: Record<string, string> = {
 `,
 };
 
-export function getSystemPrompt(mode: QueryMode, theme?: string): string {
+export function getSystemPrompt(mode: QueryMode, theme?: string, lens?: Lens): string {
   const persona = theme ? PERSONA_PROMPTS[theme] ?? "" : "";
-  return persona + MODE_PROMPTS[mode];
+  const base = persona + MODE_PROMPTS[mode];
+  return lens ? base + '\n\n' + AUDIENCE_PROMPTS[lens] : base;
 }
 
 export function buildUserMessage(
