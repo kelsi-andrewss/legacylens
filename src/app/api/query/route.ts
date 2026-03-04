@@ -2,7 +2,7 @@ import { NextRequest, after } from "next/server";
 import { embedQuery, getOpenAI } from "@/lib/openai";
 import { queryPinecone, fetchRoutinesByNames, upsertSyntheticChunk } from "@/lib/pinecone";
 import { QueryMode, getSystemPrompt, buildUserMessage } from "@/lib/prompts";
-import { CHAT_MODEL, TEMPERATURE, MAX_TOKENS, DEFAULT_TOP_K, GRAPH_EXPANSION_MAX_CHUNKS } from "@/lib/config";
+import { CHAT_MODEL, TEMPERATURE, MAX_TOKENS, DEFAULT_TOP_K, GRAPH_EXPANSION_MAX_CHUNKS, MIN_SCORE_THRESHOLD } from "@/lib/config";
 import { validateQuery, validateMode, sanitizeString } from "@/lib/validation";
 
 export const runtime = "nodejs";
@@ -50,15 +50,17 @@ export async function POST(req: NextRequest) {
       { includeSynthetic: mode === "explain" }
     );
 
+    const filteredMatches = matches.filter(m => (m.score ?? 0) >= MIN_SCORE_THRESHOLD);
+
     // Guard: no results from Pinecone — skip LLM call entirely
-    if (matches.length === 0) {
+    if (filteredMatches.length === 0) {
       return Response.json({ error: "No matching routines found for your query." }, { status: 404 });
     }
 
     // Graph expansion: fetch direct dependencies of initial results (depth=1)
-    const seen = new Set(matches.map((m) => (m.metadata?.subroutine_name as string)));
+    const seen = new Set(filteredMatches.map((m) => (m.metadata?.subroutine_name as string)));
     const depsToFetch: string[] = [];
-    for (const m of matches) {
+    for (const m of filteredMatches) {
       const depStr = (m.metadata?.dependencies as string) || '';
       const deps = depStr.split(', ').filter(Boolean);
       for (const dep of deps) {
@@ -69,8 +71,8 @@ export async function POST(req: NextRequest) {
       }
     }
     const expanded = await fetchRoutinesByNames([...new Set(depsToFetch)]);
-    console.log(`[graph-expansion] initial=${matches.length} deps_to_fetch=${depsToFetch.length} expanded=${expanded.length}`);
-    const allMatches = [...matches, ...expanded].slice(0, GRAPH_EXPANSION_MAX_CHUNKS);
+    console.log(`[graph-expansion] initial=${filteredMatches.length} deps_to_fetch=${depsToFetch.length} expanded=${expanded.length}`);
+    const allMatches = [...filteredMatches, ...expanded].slice(0, GRAPH_EXPANSION_MAX_CHUNKS);
 
     // Build context
     const systemPrompt = getSystemPrompt(mode as QueryMode, theme);
