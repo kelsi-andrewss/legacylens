@@ -225,7 +225,7 @@ export default function SimilarityShowdown() {
           <button
             onClick={() => handleGuess(true)}
             disabled={loading}
-            className="rounded-lg bg-ll-primary px-6 py-2.5 text-sm font-semibold text-ll-on-primary shadow-sm hover:bg-ll-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="rounded-lg bg-ll-primary px-6 py-2.5 text-sm font-semibold text-ll-on-primary shadow-sm hover:bg-ll-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             Higher than {THRESHOLD}%?
           </button>
@@ -267,7 +267,7 @@ export default function SimilarityShowdown() {
           {result && (
             <button
               onClick={fetchPair}
-              className="mt-2 rounded-lg bg-ll-primary px-6 py-2.5 text-sm font-semibold text-ll-on-primary shadow-sm hover:bg-ll-primary/90 transition-colors"
+              className="mt-2 rounded-lg bg-ll-primary px-6 py-2.5 text-sm font-semibold text-ll-on-primary shadow-sm hover:bg-ll-primary-hover transition-colors"
             >
               Next Round
             </button>

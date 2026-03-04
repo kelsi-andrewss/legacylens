@@ -291,7 +291,7 @@ export default function ConnectionsGame() {
           <button
             onClick={handleSubmit}
             disabled={selected.size !== 4}
-            className="px-4 py-2 text-sm rounded-md bg-ll-on-surface text-ll-surface font-medium hover:bg-ll-on-surface/80 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="px-4 py-2 text-sm rounded-md bg-ll-on-surface text-ll-surface font-medium hover:bg-ll-on-surface-hover disabled:opacity-40 disabled:cursor-not-allowed"
           >
             Submit
           </button>
@@ -306,7 +306,7 @@ export default function ConnectionsGame() {
           </p>
           <button
             onClick={initPuzzle}
-            className="px-4 py-2 text-sm rounded-md bg-ll-on-surface text-ll-surface font-medium hover:bg-ll-on-surface/80"
+            className="px-4 py-2 text-sm rounded-md bg-ll-on-surface text-ll-surface font-medium hover:bg-ll-on-surface-hover"
           >
             New Puzzle
           </button>

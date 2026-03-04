@@ -19,6 +19,10 @@
   --ll-font-display: var(--font-space-grotesk);
   --ll-font-body: var(--font-space-grotesk);
   --ll-font-mono: var(--font-geist-mono);
+  --ll-primary-hover: #00DC90;
+  --ll-primary-faint: #0A2E1E;
+  --ll-primary-muted: #007D50;
+  --ll-on-surface-hover: #CCCCCC;
 }
 
 /* ── Punch Card ── */
@@ -40,6 +44,10 @@
   --ll-font-display: var(--font-ibm-plex-mono);
   --ll-font-body: var(--font-ibm-plex-sans);
   --ll-font-mono: var(--font-geist-mono);
+  --ll-primary-hover: #A84615;
+  --ll-primary-faint: #F5DCC8;
+  --ll-primary-muted: #D88A5E;
+  --ll-on-surface-hover: #3D2F1A;
 }
 
 /* ── Kinetic Obsidian ── */
@@ -61,6 +69,10 @@
   --ll-font-display: var(--font-space-grotesk);
   --ll-font-body: var(--font-space-grotesk);
   --ll-font-mono: var(--font-geist-mono);
+  --ll-primary-hover: #00DC90;
+  --ll-primary-faint: #0A2E1E;
+  --ll-primary-muted: #007D50;
+  --ll-on-surface-hover: #CCCCCC;
 }
 
 /* ── Blueprint ── */
@@ -82,6 +94,10 @@
   --ll-font-display: var(--font-archivo-narrow);
   --ll-font-body: var(--font-archivo-narrow);
   --ll-font-mono: var(--font-geist-mono);
+  --ll-primary-hover: #152E55;
+  --ll-primary-faint: #D4E0F0;
+  --ll-primary-muted: #4A6899;
+  --ll-on-surface-hover: #2A3A50;
 }
 
 /* ── Tailwind v4 bridge ── */
@@ -97,6 +113,10 @@
   --color-ll-on-primary-container: var(--ll-on-primary-container);
   --color-ll-primary-container: var(--ll-primary-container);
   --color-ll-outline: var(--ll-outline);
+  --color-ll-primary-hover: var(--ll-primary-hover);
+  --color-ll-primary-faint: var(--ll-primary-faint);
+  --color-ll-primary-muted: var(--ll-primary-muted);
+  --color-ll-on-surface-hover: var(--ll-on-surface-hover);
   --radius-ll-sm: var(--ll-radius-sm);
   --radius-ll-md: var(--ll-radius-md);
   --radius-ll-lg: var(--ll-radius-lg);
