@@ -30,12 +30,13 @@ interface CodeSnippetProps {
   chunk: ChunkData;
   onPin?: (chunk: ChunkData) => void;
   isPinned?: boolean;
+  isDirectMatch?: boolean;
   activeRoutine?: string | null;
   onRoutineHover?: (name: string | null) => void;
   onRoutineClick?: (name: string) => void;
 }
 
-export default function CodeSnippet({ chunk, onPin, isPinned, activeRoutine, onRoutineHover, onRoutineClick }: CodeSnippetProps) {
+export default function CodeSnippet({ chunk, onPin, isPinned, isDirectMatch, activeRoutine, onRoutineHover, onRoutineClick }: CodeSnippetProps) {
   const { metadata: m, score } = chunk;
   const [showPinConfirm, setShowPinConfirm] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -163,15 +164,19 @@ export default function CodeSnippet({ chunk, onPin, isPinned, activeRoutine, onR
           >
             View on GitHub <ExternalLink className="inline h-3 w-3" />
           </a>
-          <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-            score > 0.8
-              ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
-              : score > 0.6
-                ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300"
-                : "bg-zinc-100 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-400"
-          }`}>
-            {relevance}% match
-          </span>
+          {isDirectMatch ? (
+            <span className="rounded-full px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">Direct match</span>
+          ) : (
+            <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+              score > 0.8
+                ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                : score > 0.6
+                  ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300"
+                  : "bg-zinc-100 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-400"
+            }`}>
+              {relevance}% match
+            </span>
+          )}
         </div>
       </div>
 
