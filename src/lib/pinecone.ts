@@ -39,24 +39,46 @@ export async function queryPinecone(
   return results.matches || [];
 }
 
-let cachedIds: string[] | null = null;
+const EMBEDDING_DIM = 1536;
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
-export async function getAllRoutineIds(): Promise<string[]> {
-  if (cachedIds) return cachedIds;
-  const index = getIndex();
-  const ids: string[] = [];
-  let paginationToken: string | undefined;
-  do {
-    const page = await index.listPaginated({ limit: 100, paginationToken });
-    if (page.vectors) {
-      for (const v of page.vectors) {
-        if (v.id) ids.push(v.id);
-      }
-    }
-    paginationToken = page.pagination?.next;
-  } while (paginationToken);
-  cachedIds = ids;
+let cachedSample: { ids: string[]; timestamp: number } | null = null;
+
+function generateRandomVector(dim: number): number[] {
+  const raw = Array.from({ length: dim }, () => Math.random() * 2 - 1);
+  const mag = Math.sqrt(raw.reduce((sum, v) => sum + v * v, 0));
+  return raw.map((v) => v / mag);
+}
+
+function shuffle<T>(arr: T[]): T[] {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+export async function getRandomRoutineIds(count: number): Promise<string[]> {
+  if (cachedSample && Date.now() - cachedSample.timestamp < CACHE_TTL_MS) {
+    return shuffle(cachedSample.ids).slice(0, count);
+  }
+
+  const vector = generateRandomVector(EMBEDDING_DIM);
+  const matches = await getIndex().query({
+    vector,
+    topK: count,
+    includeMetadata: false,
+  });
+
+  const ids = (matches.matches || []).map((m) => m.id);
+  cachedSample = { ids, timestamp: Date.now() };
   return ids;
+}
+
+/** @deprecated Use getRandomRoutineIds(count) directly. */
+export async function getAllRoutineIds(): Promise<string[]> {
+  return getRandomRoutineIds(100);
 }
 
 export async function fetchRoutines(ids: string[]) {
