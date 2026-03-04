@@ -1,4 +1,4 @@
-export type ThemeId = "system" | "punch-card" | "kinetic-obsidian" | "blueprint";
+export type ThemeId = "system" | "punch-card" | "blueprint";
 
 export interface ThemeMeta {
   id: ThemeId;
@@ -21,12 +21,6 @@ export const THEMES: ThemeMeta[] = [
     previewColors: { surface: "#F5F0E8", primary: "#C2410C" },
   },
   {
-    id: "kinetic-obsidian",
-    name: "Kinetic Obsidian",
-    description: "Dark pro IDE",
-    previewColors: { surface: "#121212", primary: "#00F5A0" },
-  },
-  {
     id: "blueprint",
     name: "Blueprint",
     description: "Engineering draft",
@@ -34,5 +28,5 @@ export const THEMES: ThemeMeta[] = [
   },
 ];
 
-export const DEFAULT_THEME: ThemeId = "kinetic-obsidian";
+export const DEFAULT_THEME: ThemeId = "punch-card";
 export const THEME_STORAGE_KEY = "ll-theme";

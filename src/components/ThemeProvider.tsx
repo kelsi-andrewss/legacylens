@@ -14,13 +14,15 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 const MEDIA_QUERY = "(prefers-color-scheme: dark)";
 
 function resolveSystemTheme(isDark: boolean): string {
-  return isDark ? "kinetic-obsidian" : "blueprint";
+  return isDark ? "blueprint" : "punch-card";
 }
 
 function readStoredTheme(): ThemeId {
   if (typeof window === "undefined") return DEFAULT_THEME;
   const stored = localStorage.getItem(THEME_STORAGE_KEY);
-  if (stored === "system" || stored === "punch-card" || stored === "kinetic-obsidian" || stored === "blueprint") {
+  // Graceful fallback: treat removed "kinetic-obsidian" as "punch-card"
+  if (stored === "kinetic-obsidian") return "punch-card";
+  if (stored === "system" || stored === "punch-card" || stored === "blueprint") {
     return stored;
   }
   return DEFAULT_THEME;
