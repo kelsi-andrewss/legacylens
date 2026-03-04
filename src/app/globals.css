@@ -159,3 +159,166 @@ body {
 [data-theme="blueprint"] .bg-ll-surface-variant {
   box-shadow: inset 0 1px 3px rgba(15, 25, 41, 0.08);
 }
+
+/* Blueprint: paper texture noise overlay */
+[data-theme="blueprint"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 200px 200px;
+}
+
+/* Blueprint: vignette overlay */
+[data-theme="blueprint"] body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(ellipse at center, transparent 50%, rgba(15, 25, 41, 0.12) 100%);
+}
+
+/* Blueprint: ensure main content sits above overlays */
+[data-theme="blueprint"] body > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Blueprint: over-shot ink lines on bordered elements */
+[data-theme="blueprint"] .rounded-lg[class*="border"] {
+  position: relative;
+  overflow: visible;
+}
+
+[data-theme="blueprint"] .rounded-lg[class*="border"]::before,
+[data-theme="blueprint"] .rounded-lg[class*="border"]::after {
+  content: "";
+  position: absolute;
+  background: var(--ll-outline);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Top-left corner: horizontal over-shot */
+[data-theme="blueprint"] .rounded-lg[class*="border"]::before {
+  top: -1px;
+  left: -6px;
+  width: 12px;
+  height: 1px;
+}
+
+/* Top-left corner: vertical over-shot */
+[data-theme="blueprint"] .rounded-lg[class*="border"]::after {
+  top: -6px;
+  left: -1px;
+  width: 1px;
+  height: 12px;
+}
+
+/* ── Punch Card: Tractor Feed ── */
+.tractor-feed {
+  position: relative;
+}
+
+.tractor-feed::before,
+.tractor-feed::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 16px;
+  pointer-events: none;
+  z-index: 2;
+  background-image: radial-gradient(circle, var(--ll-outline) 3px, transparent 3px);
+  background-size: 16px 18px;
+  background-position: center 4px;
+  background-repeat: repeat-y;
+}
+
+.tractor-feed::before {
+  left: -20px;
+  border-right: 1px dashed var(--ll-outline);
+}
+
+.tractor-feed::after {
+  right: -20px;
+  border-left: 1px dashed var(--ll-outline);
+}
+
+/* Punch Card: continuous paper texture on tractor-feed */
+[data-theme="punch-card"] .tractor-feed {
+  background-color: #F8F4EC;
+  background-image:
+    repeating-linear-gradient(
+      to bottom,
+      transparent,
+      transparent 279px,
+      rgba(180, 170, 150, 0.15) 279px,
+      rgba(180, 170, 150, 0.15) 280px
+    );
+  margin-left: 24px;
+  margin-right: 24px;
+}
+
+/* ── Punch Card: Toggle Switch Submit Button ── */
+[data-theme="punch-card"] .toggle-switch-btn {
+  position: relative;
+  width: 64px;
+  height: 32px;
+  border-radius: 16px;
+  background: var(--ll-surface-tonal);
+  border: 2px solid var(--ll-outline);
+  padding: 0;
+  cursor: pointer;
+  transition: background-color 200ms, border-color 200ms;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="punch-card"] .toggle-switch-btn .toggle-switch-knob {
+  display: block;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #E8E0D0, #D0C8B8);
+  border: 1px solid var(--ll-outline);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform 200ms, background 200ms;
+}
+
+[data-theme="punch-card"] .toggle-switch-btn:not(:disabled):hover {
+  border-color: var(--ll-primary);
+}
+
+[data-theme="punch-card"] .toggle-switch-btn:not(:disabled):hover .toggle-switch-knob {
+  background: linear-gradient(135deg, #F0E8D8, #E0D8C8);
+}
+
+/* "On" state when query is present (not disabled by empty query) */
+[data-theme="punch-card"] .toggle-switch-btn.toggle-on {
+  background: var(--ll-primary-container);
+  border-color: var(--ll-primary);
+}
+
+[data-theme="punch-card"] .toggle-switch-btn.toggle-on .toggle-switch-knob {
+  transform: translateX(32px);
+  background: linear-gradient(135deg, var(--ll-primary), var(--ll-primary-hover));
+  border-color: var(--ll-primary-hover);
+}
+
+[data-theme="punch-card"] .toggle-switch-btn:focus-visible {
+  outline: 2px solid var(--ll-primary);
+  outline-offset: 2px;
+}
+
+[data-theme="punch-card"] .toggle-switch-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
