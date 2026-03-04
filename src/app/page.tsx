@@ -190,6 +190,15 @@ export default function Home() {
     [mode]
   );
 
+  const handleRoutineClick = useCallback(
+    (name: string) => {
+      const q = `Explain ${name}`;
+      setExampleQuery(q);
+      handleSearch(q);
+    },
+    [handleSearch]
+  );
+
   const handleModeChange = useCallback((newMode: string) => {
     setMode(newMode);
     if (lastQuery && (chunks.length > 0 || answer)) {
@@ -329,6 +338,7 @@ export default function Home() {
                 routineNames={routineNames}
                 activeRoutine={activeRoutine}
                 onRoutineHover={handleRoutineHover}
+                onRoutineClick={handleRoutineClick}
               />
             )}
 
@@ -345,6 +355,7 @@ export default function Home() {
                       isPinned={pinnedIds.has(chunk.id)}
                       activeRoutine={activeRoutine}
                       onRoutineHover={handleRoutineHover}
+                      onRoutineClick={handleRoutineClick}
                     />
                   </div>
                 ))}

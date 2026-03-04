@@ -32,9 +32,10 @@ interface CodeSnippetProps {
   isPinned?: boolean;
   activeRoutine?: string | null;
   onRoutineHover?: (name: string | null) => void;
+  onRoutineClick?: (name: string) => void;
 }
 
-export default function CodeSnippet({ chunk, onPin, isPinned, activeRoutine, onRoutineHover }: CodeSnippetProps) {
+export default function CodeSnippet({ chunk, onPin, isPinned, activeRoutine, onRoutineHover, onRoutineClick }: CodeSnippetProps) {
   const { metadata: m, score } = chunk;
   const [showPinConfirm, setShowPinConfirm] = useState(false);
 
@@ -125,6 +126,25 @@ export default function CodeSnippet({ chunk, onPin, isPinned, activeRoutine, onR
       <div className="px-4 py-2 text-xs text-ll-on-surface-muted flex flex-wrap gap-x-4 gap-y-1 border-b border-ll-outline">
         <span>{m.file_path}:{m.line_start}-{m.line_end}</span>
         {m.parameters && <span>Params: {m.parameters}</span>}
+        {m.dependencies && onRoutineClick && (
+          <span className="flex flex-wrap gap-1">
+            <span className="text-ll-on-surface-muted">Deps:</span>
+            {m.dependencies
+              .split(",")
+              .map((d) => d.trim())
+              .filter(Boolean)
+              .map((dep) => (
+                <button
+                  key={dep}
+                  onClick={() => onRoutineClick(dep)}
+                  className="font-mono underline decoration-dotted cursor-pointer hover:text-ll-primary transition-colors"
+                  title={`Navigate to ${dep}`}
+                >
+                  {dep}
+                </button>
+              ))}
+          </span>
+        )}
       </div>
 
       {m.dependencies && (
@@ -133,6 +153,7 @@ export default function CodeSnippet({ chunk, onPin, isPinned, activeRoutine, onR
             routineName={m.subroutine_name}
             dependencies={m.dependencies}
             dataTypePrefix={m.data_type_prefix}
+            onRoutineClick={onRoutineClick}
           />
         </div>
       )}
