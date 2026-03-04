@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { CheckCircle2, XCircle } from "lucide-react";
 
 interface RoutineMetadata {
   subroutine_name: string;
@@ -247,14 +248,16 @@ export default function SimilarityShowdown() {
           </div>
 
           {result === "correct" && (
-            <div className="text-lg font-semibold text-green-600 dark:text-green-400">
+            <div className="flex items-center gap-2 text-lg font-semibold text-green-600 dark:text-green-400">
+              <CheckCircle2 className="h-5 w-5" />
               Correct!
             </div>
           )}
 
           {result === "wrong" && (
             <div className="space-y-1 text-center">
-              <div className="text-lg font-semibold text-red-600 dark:text-red-400">
+              <div className="flex items-center justify-center gap-2 text-lg font-semibold text-red-600 dark:text-red-400">
+                <XCircle className="h-5 w-5" />
                 Wrong!
               </div>
               <div className="text-sm text-ll-on-surface-muted">

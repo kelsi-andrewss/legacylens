@@ -2,6 +2,7 @@
 
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { Loader2 } from "lucide-react";
 
 interface AnswerStreamProps {
   content: string;
@@ -16,7 +17,7 @@ export default function AnswerStream({ content, isStreaming }: AnswerStreamProps
       <div className="prose prose-neutral dark:prose-invert max-w-none prose-pre:bg-ll-surface-tonal [&_code]:text-ll-primary">
         <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
         {isStreaming && (
-          <span className="inline-block h-4 w-1 animate-pulse bg-ll-primary ml-0.5" />
+          <Loader2 className="inline h-4 w-4 animate-spin text-ll-primary" />
         )}
       </div>
     </div>
