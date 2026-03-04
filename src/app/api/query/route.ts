@@ -11,12 +11,13 @@ export const maxDuration = 30;
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { query, mode = "explain", filters, theme, lens } = body as {
+    const { query, mode = "explain", filters, theme, lens, history = [] } = body as {
       query: string;
       mode?: QueryMode;
       filters?: { category?: string; data_type_prefix?: string };
       theme?: string;
       lens?: Lens;
+      history?: { role: 'user' | 'assistant'; content: string }[];
     };
 
     const queryResult = validateQuery(query);
@@ -97,6 +98,7 @@ export async function POST(req: NextRequest) {
       model: CHAT_MODEL,
       messages: [
         { role: "system", content: systemPrompt },
+        ...history.slice(-10),
         { role: "user", content: userMessage },
       ],
       stream: true,
