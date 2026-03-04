@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import SearchBar from "@/components/SearchBar";
 import ModeSelector from "@/components/ModeSelector";
 import AnswerStream from "@/components/AnswerStream";
 import CodeSnippet from "@/components/CodeSnippet";
+import { useTheme } from "@/components/ThemeProvider";
 
 interface ChunkData {
   id: string;
@@ -31,6 +32,9 @@ export default function Home() {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
   const [exampleQuery, setExampleQuery] = useState<string | undefined>();
+  const { resolvedTheme } = useTheme();
+  const resolvedThemeRef = useRef(resolvedTheme);
+  resolvedThemeRef.current = resolvedTheme;
 
   const handleSearch = useCallback(
     async (query: string, modeOverride?: string) => {
@@ -47,7 +51,7 @@ export default function Home() {
         const response = await fetch("/api/query", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query, mode: activeMode, filters: Object.keys(filters).length > 0 ? filters : undefined }),
+          body: JSON.stringify({ query, mode: activeMode, filters: Object.keys(filters).length > 0 ? filters : undefined, theme: resolvedThemeRef.current }),
         });
 
         if (!response.ok) {
