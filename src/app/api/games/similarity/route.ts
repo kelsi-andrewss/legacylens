@@ -28,22 +28,30 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const [score, fetched] = await Promise.all([
-    getCosineSimilarity(idA, idB),
-    fetchRoutines([idA, idB]),
-  ]);
+  try {
+    const [score, fetched] = await Promise.all([
+      getCosineSimilarity(idA, idB),
+      fetchRoutines([idA, idB]),
+    ]);
 
-  const nameA =
-    (fetched.records[idA]?.metadata as unknown as ChunkMetadata)
-      ?.subroutine_name ?? idA;
-  const nameB =
-    (fetched.records[idB]?.metadata as unknown as ChunkMetadata)
-      ?.subroutine_name ?? idB;
+    const nameA =
+      (fetched.records[idA]?.metadata as unknown as ChunkMetadata)
+        ?.subroutine_name ?? idA;
+    const nameB =
+      (fetched.records[idB]?.metadata as unknown as ChunkMetadata)
+        ?.subroutine_name ?? idB;
 
-  return Response.json({
-    score,
-    percentage: Math.round(score * 100),
-    nameA,
-    nameB,
-  });
+    return Response.json({
+      score,
+      percentage: Math.round(score * 100),
+      nameA,
+      nameB,
+    });
+  } catch (error) {
+    console.error("Similarity calculation failed:", error);
+    return Response.json(
+      { error: "Failed to calculate similarity" },
+      { status: 500 }
+    );
+  }
 }
