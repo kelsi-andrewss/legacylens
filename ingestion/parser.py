@@ -18,6 +18,9 @@ class FortranRoutine:
     dependencies: list[str] = field(default_factory=list)
     data_type_prefix: str = ""  # S, D, C, Z
     category: str = ""  # BLAS, LAPACK
+    invariants: str = ""
+    constraints: str = ""
+    error_codes: str = ""
 
 
 # Match SUBROUTINE/FUNCTION/PROGRAM declarations in Fortran fixed-format
@@ -45,6 +48,103 @@ def infer_category(file_path: str) -> str:
     if "blas" in path_lower:
         return "BLAS"
     return "LAPACK"
+
+
+def extract_invariants(comment_block: str) -> dict:
+    """Extract structured invariants from a normalized Fortran comment block.
+
+    Returns a dict with keys ``invariants``, ``constraints``, ``error_codes``.
+    All values default to "" if the corresponding section is absent or on any
+    parse error.  The comment_block is already stripped of C/c/*/! prefixes by
+    extract_comment_block, so no comment-style handling is needed here.
+    """
+    try:
+        lines = comment_block.splitlines()
+
+        # --- Section boundary detection ---
+        # Patterns that delimit well-known LAPACK comment sections.
+        PURPOSE_RE = re.compile(r"^\s*(?:Purpose|Purpose\s*:?)\s*$", re.IGNORECASE)
+        FURTHER_RE = re.compile(r"^\s*Further\s+Details\s*:?\s*$", re.IGNORECASE)
+        ARGS_RE = re.compile(r"^\s*Arguments\s*:?\s*$", re.IGNORECASE)
+        INFO_RE = re.compile(r"^\s*(?:INFO|Error\s+Info|Error)\s*", re.IGNORECASE)
+        SEPARATOR_RE = re.compile(r"^[=\-]+$")
+        INTENT_RE = re.compile(
+            r"\b(INPUT|OUTPUT|INOUT|intent\s*\(\s*in\s*\)|intent\s*\(\s*out\s*\)|"
+            r"intent\s*\(\s*inout\s*\)|\(input\)|\(output\)|\(in\/out\)|\(in,out\))\b",
+            re.IGNORECASE,
+        )
+
+        # Collect invariants: Purpose section + opening description paragraph
+        invariant_lines: list[str] = []
+        constraint_lines: list[str] = []
+        error_lines: list[str] = []
+
+        i = 0
+        n = len(lines)
+
+        # Grab opening description paragraph (lines before any known section header)
+        # and explicit Purpose / Further Details sections.
+        in_purpose = False
+        in_args = False
+        in_info = False
+
+        while i < n:
+            line = lines[i]
+            stripped = line.strip()
+
+            if PURPOSE_RE.match(stripped) or FURTHER_RE.match(stripped):
+                in_purpose = True
+                in_args = False
+                in_info = False
+                i += 1
+                continue
+
+            if ARGS_RE.match(stripped):
+                in_args = True
+                in_purpose = False
+                in_info = False
+                i += 1
+                continue
+
+            if INFO_RE.match(stripped):
+                in_info = True
+                in_purpose = False
+                in_args = False
+                # Include the trigger line itself — it often contains the description.
+                error_lines.append(stripped)
+                i += 1
+                continue
+
+            if in_purpose:
+                if not SEPARATOR_RE.match(stripped):
+                    invariant_lines.append(stripped)
+            elif in_args:
+                # Capture lines that describe argument intent.
+                if INTENT_RE.search(line):
+                    constraint_lines.append(stripped)
+            elif in_info:
+                if stripped:
+                    error_lines.append(stripped)
+
+            i += 1
+
+        # If no explicit Purpose section was found, treat the first non-empty
+        # paragraph (before any section header) as the invariant description.
+        if not invariant_lines:
+            for line in lines:
+                s = line.strip()
+                if PURPOSE_RE.match(s) or ARGS_RE.match(s) or INFO_RE.match(s):
+                    break
+                if s:
+                    invariant_lines.append(s)
+
+        return {
+            "invariants": "\n".join(invariant_lines).strip(),
+            "constraints": "\n".join(constraint_lines).strip(),
+            "error_codes": "\n".join(error_lines).strip(),
+        }
+    except Exception:
+        return {"invariants": "", "constraints": "", "error_codes": ""}
 
 
 def extract_comment_block(lines: list[str], start_idx: int) -> str:
@@ -117,6 +217,7 @@ def parse_file(file_path: Path) -> list[FortranRoutine]:
 
         comment_block = extract_comment_block(lines, start_line)
         file_str = str(file_path)
+        inv = extract_invariants(comment_block)
 
         routines.append(
             FortranRoutine(
@@ -131,6 +232,9 @@ def parse_file(file_path: Path) -> list[FortranRoutine]:
                 dependencies=deps,
                 data_type_prefix=infer_data_type_prefix(name),
                 category=infer_category(file_str),
+                invariants=inv["invariants"],
+                constraints=inv["constraints"],
+                error_codes=inv["error_codes"],
             )
         )
 

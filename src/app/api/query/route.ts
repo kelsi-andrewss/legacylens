@@ -1,8 +1,8 @@
-import { NextRequest } from "next/server";
+import { NextRequest, after } from "next/server";
 import { embedQuery, getOpenAI } from "@/lib/openai";
-import { queryPinecone } from "@/lib/pinecone";
+import { queryPinecone, fetchRoutinesByNames, upsertSyntheticChunk } from "@/lib/pinecone";
 import { QueryMode, getSystemPrompt, buildUserMessage } from "@/lib/prompts";
-import { CHAT_MODEL, TEMPERATURE, MAX_TOKENS, DEFAULT_TOP_K } from "@/lib/config";
+import { CHAT_MODEL, TEMPERATURE, MAX_TOKENS, DEFAULT_TOP_K, GRAPH_EXPANSION_MAX_CHUNKS } from "@/lib/config";
 import { validateQuery, validateMode, sanitizeString } from "@/lib/validation";
 
 export const runtime = "nodejs";
@@ -42,16 +42,34 @@ export async function POST(req: NextRequest) {
     // Embed query
     const embedding = await embedQuery(sanitizedQuery);
 
-    // Search Pinecone
+    // Search Pinecone — synthetic chunks included only for explain mode (most benefit from cached context).
     const matches = await queryPinecone(
       embedding,
       DEFAULT_TOP_K,
-      Object.keys(pineconeFilter).length > 0 ? pineconeFilter : undefined
+      Object.keys(pineconeFilter).length > 0 ? pineconeFilter : undefined,
+      { includeSynthetic: mode === "explain" }
     );
+
+    // Graph expansion: fetch direct dependencies of initial results (depth=1)
+    const seen = new Set(matches.map((m) => (m.metadata?.subroutine_name as string)));
+    const depsToFetch: string[] = [];
+    for (const m of matches) {
+      const depStr = (m.metadata?.dependencies as string) || '';
+      const deps = depStr.split(', ').filter(Boolean);
+      for (const dep of deps) {
+        if (!seen.has(dep)) {
+          depsToFetch.push(dep);
+          seen.add(dep);
+        }
+      }
+    }
+    const expanded = await fetchRoutinesByNames([...new Set(depsToFetch)]);
+    console.log(`[graph-expansion] initial=${matches.length} deps_to_fetch=${depsToFetch.length} expanded=${expanded.length}`);
+    const allMatches = [...matches, ...expanded].slice(0, GRAPH_EXPANSION_MAX_CHUNKS);
 
     // Build context
     const systemPrompt = getSystemPrompt(mode as QueryMode, theme);
-    const userMessage = buildUserMessage(sanitizedQuery, matches as { metadata: Record<string, unknown>; score?: number }[]);
+    const userMessage = buildUserMessage(sanitizedQuery, allMatches as { metadata: Record<string, unknown>; score?: number }[]);
 
     // Stream response from GPT-4o-mini
     const stream = await getOpenAI().chat.completions.create({
@@ -67,10 +85,11 @@ export async function POST(req: NextRequest) {
 
     // Convert to ReadableStream
     const encoder = new TextEncoder();
+    const fullResponse: string[] = [];
     const readable = new ReadableStream({
       async start(controller) {
         // Send chunks metadata first
-        const chunksData = matches.map((m) => ({
+        const chunksData = allMatches.map((m) => ({
           id: m.id,
           score: m.score,
           metadata: m.metadata,
@@ -79,10 +98,11 @@ export async function POST(req: NextRequest) {
           encoder.encode(`data: ${JSON.stringify({ type: "chunks", data: chunksData })}\n\n`)
         );
 
-        // Stream LLM response
+        // Stream LLM response, buffering for post-response synthetic upsert
         for await (const chunk of stream) {
           const content = chunk.choices[0]?.delta?.content;
           if (content) {
+            fullResponse.push(content);
             controller.enqueue(
               encoder.encode(`data: ${JSON.stringify({ type: "text", data: content })}\n\n`)
             );
@@ -90,6 +110,17 @@ export async function POST(req: NextRequest) {
         }
         controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "done" })}\n\n`));
         controller.close();
+
+        // After the response is sent, cache the LLM answer back to Pinecone as a synthetic chunk.
+        // `after()` runs after the response is flushed but before the serverless function exits.
+        const routineNames = allMatches
+          .map((m) => m.metadata?.subroutine_name as string)
+          .filter(Boolean);
+        after(
+          upsertSyntheticChunk(sanitizedQuery, fullResponse.join(""), routineNames).catch(
+            console.error
+          )
+        );
       },
     });
 

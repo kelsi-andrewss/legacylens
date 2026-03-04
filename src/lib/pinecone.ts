@@ -1,5 +1,6 @@
 import { Pinecone } from "@pinecone-database/pinecone";
 import { DEFAULT_TOP_K, PINECONE_INDEX_NAME } from "@/lib/config";
+import { embedQuery } from "@/lib/openai";
 
 let client: Pinecone | null = null;
 let _index: ReturnType<Pinecone["index"]> | null = null;
@@ -23,20 +24,74 @@ export interface ChunkMetadata {
   data_type_prefix: string;
   category: string;
   text: string;
+  invariants?: string;
+  constraints?: string;
+  error_codes?: string;
 }
 
 export async function queryPinecone(
   embedding: number[],
   topK: number = DEFAULT_TOP_K,
-  filter?: Record<string, unknown>
+  filter?: Record<string, unknown>,
+  options?: { includeSynthetic?: boolean }
 ) {
+  // Exclude synthetic chunks by default to prevent hallucination pollution of ground-truth code results.
+  const excludeSynthetic = !(options?.includeSynthetic ?? false);
+  const syntheticFilter: Record<string, unknown> = excludeSynthetic
+    ? { is_synthetic: { $ne: true } }
+    : {};
+  const mergedFilter =
+    filter && Object.keys(filter).length > 0
+      ? { ...filter, ...syntheticFilter }
+      : Object.keys(syntheticFilter).length > 0
+      ? syntheticFilter
+      : undefined;
+
   const results = await getIndex().query({
     vector: embedding,
     topK,
     includeMetadata: true,
-    filter: filter || undefined,
+    filter: mergedFilter,
   });
   return results.matches || [];
+}
+
+/** djb2 hash — returns a stable hex string for a given input string. */
+function djb2Hash(str: string): string {
+  let hash = 5381;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) + hash) ^ str.charCodeAt(i);
+    hash = hash >>> 0; // keep unsigned 32-bit
+  }
+  return hash.toString(16);
+}
+
+/**
+ * Embed an LLM answer and upsert it to Pinecone as a synthetic chunk.
+ * Synthetic chunks are tagged `is_synthetic: true` so they can be
+ * filtered in or out independently of ground-truth code vectors.
+ */
+export async function upsertSyntheticChunk(
+  query: string,
+  answer: string,
+  routineNames: string[]
+): Promise<void> {
+  const truncatedAnswer = answer.slice(0, 2000);
+  const embedding = await embedQuery(truncatedAnswer);
+  const id = `synthetic_${djb2Hash(query)}`;
+  await getIndex().upsert([
+    {
+      id,
+      values: embedding,
+      metadata: {
+        is_synthetic: true,
+        text: truncatedAnswer,
+        query,
+        linked_routines: routineNames.slice(0, 10).join(", "),
+        created_at: Date.now(),
+      },
+    },
+  ]);
 }
 
 const EMBEDDING_DIM = 1536;
@@ -84,6 +139,22 @@ export async function getAllRoutineIds(): Promise<string[]> {
 export async function fetchRoutines(ids: string[]) {
   const index = getIndex();
   return index.fetch({ ids });
+}
+
+/**
+ * Fetch chunks for a list of routine names using a metadata filter.
+ * Uses a zero vector since Pinecone requires a vector even for metadata-only queries.
+ */
+export async function fetchRoutinesByNames(names: string[]) {
+  if (names.length === 0) return [];
+  const index = getIndex();
+  const results = await index.query({
+    vector: new Array(1536).fill(0),
+    topK: Math.min(names.length * 3, 50),
+    includeMetadata: true,
+    filter: { subroutine_name: { $in: names } },
+  });
+  return results.matches || [];
 }
 
 /** Pure cosine similarity between two vectors. */

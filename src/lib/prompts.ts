@@ -83,6 +83,13 @@ export function buildUserMessage(
     context += `Category: ${m.category} | Type: ${m.data_type_prefix}\n`;
     if (m.parameters) context += `Parameters: ${m.parameters}\n`;
     if (m.dependencies) context += `Calls: ${m.dependencies}\n`;
+    const hasInvariants = m.invariants || m.constraints || m.error_codes;
+    if (hasInvariants) {
+      context += `Technical Invariants:\n`;
+      if (m.constraints) context += `  Constraints: ${m.constraints}\n`;
+      if (m.invariants) context += `  Invariants: ${m.invariants}\n`;
+      if (m.error_codes) context += `  Error Codes: ${m.error_codes}\n`;
+    }
     context += `Relevance: ${((chunk.score || 0) * 100).toFixed(1)}%\n`;
     context += "```fortran\n" + m.text + "\n```\n\n";
   }
