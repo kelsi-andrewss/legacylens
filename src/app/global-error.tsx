@@ -16,8 +16,8 @@ export default function GlobalError({
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          backgroundColor: "#080808",
-          color: "#F0F0F0",
+          backgroundColor: "#121212",
+          color: "#F1F5F9",
           fontFamily: "system-ui, sans-serif",
         }}
       >
@@ -25,11 +25,11 @@ export default function GlobalError({
           <h2 style={{ fontSize: "1.5rem", fontWeight: 700, marginBottom: "1rem" }}>
             Something went wrong
           </h2>
-          <p style={{ color: "#888888", marginBottom: "0.5rem" }}>
+          <p style={{ color: "#94A3B8", marginBottom: "0.5rem" }}>
             A critical error occurred. Please try again.
           </p>
           {error.digest && (
-            <p style={{ color: "#888888", fontSize: "0.75rem", marginBottom: "1.5rem" }}>
+            <p style={{ color: "#94A3B8", fontSize: "0.75rem", marginBottom: "1.5rem" }}>
               Error ID: {error.digest}
             </p>
           )}
@@ -37,7 +37,7 @@ export default function GlobalError({
             onClick={reset}
             style={{
               backgroundColor: "#00F5A0",
-              color: "#003D28",
+              color: "#0B120F",
               border: "none",
               borderRadius: "12px",
               padding: "0.5rem 1.5rem",

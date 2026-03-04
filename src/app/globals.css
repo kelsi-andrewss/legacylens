@@ -2,17 +2,17 @@
 
 /* ── SSR fallback: kinetic-obsidian defaults ── */
 :root {
-  --ll-surface: #080808;
-  --ll-surface-variant: #111111;
-  --ll-surface-tonal: #1A1A1A;
+  --ll-surface: #121212;
+  --ll-surface-variant: #1E1E1E;
+  --ll-surface-tonal: #2C2C2C;
   --ll-primary: #00F5A0;
   --ll-secondary: #00D4FF;
-  --ll-on-surface: #F0F0F0;
-  --ll-on-surface-muted: #888888;
-  --ll-on-primary: #003D28;
+  --ll-on-surface: #F1F5F9;
+  --ll-on-surface-muted: #94A3B8;
+  --ll-on-primary: #0B120F;
   --ll-on-primary-container: #00F5A0;
-  --ll-primary-container: #003D28;
-  --ll-outline: #2A2A2A;
+  --ll-primary-container: #064E3B;
+  --ll-outline: #3F444E;
   --ll-radius-sm: 12px;
   --ll-radius-md: 16px;
   --ll-radius-lg: 24px;
@@ -21,7 +21,7 @@
   --ll-font-mono: var(--font-geist-mono);
   --ll-primary-hover: #00DC90;
   --ll-primary-faint: #0A2E1E;
-  --ll-primary-muted: #007D50;
+  --ll-primary-muted: #10B981;
   --ll-on-surface-hover: #CCCCCC;
 }
 
@@ -30,7 +30,7 @@
   --ll-surface: #F5F0E8;
   --ll-surface-variant: #EDE8DC;
   --ll-surface-tonal: #E5DFD0;
-  --ll-primary: #C4541A;
+  --ll-primary: #C2410C;
   --ll-secondary: #6B7A2E;
   --ll-on-surface: #1A1208;
   --ll-on-surface-muted: #6B5D45;
@@ -46,23 +46,23 @@
   --ll-font-mono: var(--font-geist-mono);
   --ll-primary-hover: #A84615;
   --ll-primary-faint: #F5DCC8;
-  --ll-primary-muted: #D88A5E;
+  --ll-primary-muted: #B45309;
   --ll-on-surface-hover: #3D2F1A;
 }
 
 /* ── Kinetic Obsidian ── */
 [data-theme="kinetic-obsidian"] {
-  --ll-surface: #080808;
-  --ll-surface-variant: #111111;
-  --ll-surface-tonal: #1A1A1A;
+  --ll-surface: #121212;
+  --ll-surface-variant: #1E1E1E;
+  --ll-surface-tonal: #2C2C2C;
   --ll-primary: #00F5A0;
   --ll-secondary: #00D4FF;
-  --ll-on-surface: #F0F0F0;
-  --ll-on-surface-muted: #888888;
-  --ll-on-primary: #003D28;
+  --ll-on-surface: #F1F5F9;
+  --ll-on-surface-muted: #94A3B8;
+  --ll-on-primary: #0B120F;
   --ll-on-primary-container: #00F5A0;
-  --ll-primary-container: #003D28;
-  --ll-outline: #2A2A2A;
+  --ll-primary-container: #064E3B;
+  --ll-outline: #3F444E;
   --ll-radius-sm: 12px;
   --ll-radius-md: 16px;
   --ll-radius-lg: 24px;
@@ -71,7 +71,7 @@
   --ll-font-mono: var(--font-geist-mono);
   --ll-primary-hover: #00DC90;
   --ll-primary-faint: #0A2E1E;
-  --ll-primary-muted: #007D50;
+  --ll-primary-muted: #10B981;
   --ll-on-surface-hover: #CCCCCC;
 }
 
@@ -83,11 +83,11 @@
   --ll-primary: #1B3A6B;
   --ll-secondary: #4A6FA5;
   --ll-on-surface: #0F1929;
-  --ll-on-surface-muted: #5A6B82;
+  --ll-on-surface-muted: #475569;
   --ll-on-primary: #FFFFFF;
   --ll-on-primary-container: #1B3A6B;
   --ll-primary-container: #D4E0F0;
-  --ll-outline: #C5D0E0;
+  --ll-outline: #94A3B8;
   --ll-radius-sm: 4px;
   --ll-radius-md: 8px;
   --ll-radius-lg: 12px;
@@ -170,7 +170,7 @@ body {
 /* Kinetic Obsidian: glassmorphism header, glow on focused inputs */
 [data-theme="kinetic-obsidian"] .theme-header {
   backdrop-filter: blur(12px);
-  background: rgba(8, 8, 8, 0.8);
+  background: rgba(18, 18, 18, 0.8);
 }
 
 [data-theme="kinetic-obsidian"] .theme-search input:focus {
@@ -179,7 +179,7 @@ body {
 
 /* Blueprint: grid paper background, inset card shadows */
 [data-theme="blueprint"] body {
-  background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M 24 0 L 0 0 0 24' fill='none' stroke='%23C5D0E0' stroke-width='0.5'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg width='24' height='24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M 24 0 L 0 0 0 24' fill='none' stroke='%2394A3B8' stroke-width='0.5'/%3E%3C/svg%3E");
   background-repeat: repeat;
 }
 
