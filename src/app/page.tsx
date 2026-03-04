@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import SearchBar from "@/components/SearchBar";
 import ModeSelector from "@/components/ModeSelector";
 import AnswerStream from "@/components/AnswerStream";
@@ -38,12 +38,21 @@ export default function Home() {
   const [showPokedex, setShowPokedex] = useState(false);
   const [pinnedItems, setPinnedItems] = useState<PinnedItem[]>(loadPinnedItems);
   const [activeChallenge, setActiveChallenge] = useState<Challenge | null>(null);
+  const [activeRoutine, setActiveRoutine] = useState<string | null>(null);
+
+  const handleRoutineHover = useCallback((name: string | null) => {
+    setActiveRoutine(name);
+  }, []);
 
   useEffect(() => {
     localStorage.setItem(SCRATCHPAD_KEY, JSON.stringify(pinnedItems));
   }, [pinnedItems]);
 
   const pinnedIds = new Set(pinnedItems.map((p) => p.id));
+  const routineNames = useMemo(
+    () => [...new Set(chunks.map((c) => c.metadata.subroutine_name).filter(Boolean))],
+    [chunks]
+  );
 
   const handlePin = useCallback((chunk: ChunkData) => {
     setPinnedItems((prev) => {
@@ -263,7 +272,13 @@ export default function Home() {
             <ModeSelector mode={mode} onModeChange={setMode} />
 
             {(answer || isLoading) && (
-              <AnswerStream content={answer} isStreaming={isLoading} />
+              <AnswerStream
+                content={answer}
+                isStreaming={isLoading}
+                routineNames={routineNames}
+                activeRoutine={activeRoutine}
+                onRoutineHover={handleRoutineHover}
+              />
             )}
 
             {chunks.length > 0 && (
@@ -277,6 +292,8 @@ export default function Home() {
                     chunk={chunk}
                     onPin={handlePin}
                     isPinned={pinnedIds.has(chunk.id)}
+                    activeRoutine={activeRoutine}
+                    onRoutineHover={handleRoutineHover}
                   />
                 ))}
               </div>
