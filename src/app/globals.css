@@ -111,7 +111,6 @@
 body {
   background: var(--ll-surface);
   color: var(--ll-on-surface);
-  font-family: var(--ll-font-body), sans-serif;
 }
 
 /* === Theme Flourishes === */
