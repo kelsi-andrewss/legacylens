@@ -51,9 +51,21 @@ export async function POST(req: NextRequest) {
     );
 
     const filteredMatches = matches.filter(m => (m.score ?? 0) >= MIN_SCORE_THRESHOLD);
+    const filtersApplied = Object.keys(pineconeFilter).length > 0;
 
     // Guard: no results from Pinecone — skip LLM call entirely
     if (filteredMatches.length === 0) {
+      if (filtersApplied) {
+        // Re-query without filters to determine if results exist at all
+        const unfilteredMatches = await queryPinecone(embedding, DEFAULT_TOP_K);
+        const unfilteredFiltered = unfilteredMatches.filter(m => (m.score ?? 0) >= MIN_SCORE_THRESHOLD);
+        if (unfilteredFiltered.length > 0) {
+          return Response.json(
+            { error: "No results for the selected filters — try removing them to see all matches." },
+            { status: 404 }
+          );
+        }
+      }
       return Response.json({ error: "No matching routines found for your query." }, { status: 404 });
     }
 
