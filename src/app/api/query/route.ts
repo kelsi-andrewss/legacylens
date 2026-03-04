@@ -1,8 +1,8 @@
 import { NextRequest } from "next/server";
 import { embedQuery, getOpenAI } from "@/lib/openai";
-import { queryPinecone } from "@/lib/pinecone";
+import { queryPinecone, fetchRoutinesByNames } from "@/lib/pinecone";
 import { QueryMode, getSystemPrompt, buildUserMessage } from "@/lib/prompts";
-import { CHAT_MODEL, TEMPERATURE, MAX_TOKENS, DEFAULT_TOP_K } from "@/lib/config";
+import { CHAT_MODEL, TEMPERATURE, MAX_TOKENS, DEFAULT_TOP_K, GRAPH_EXPANSION_MAX_CHUNKS } from "@/lib/config";
 import { validateQuery, validateMode, sanitizeString } from "@/lib/validation";
 
 export const runtime = "nodejs";
@@ -49,9 +49,26 @@ export async function POST(req: NextRequest) {
       Object.keys(pineconeFilter).length > 0 ? pineconeFilter : undefined
     );
 
+    // Graph expansion: fetch direct dependencies of initial results (depth=1)
+    const seen = new Set(matches.map((m) => (m.metadata?.subroutine_name as string)));
+    const depsToFetch: string[] = [];
+    for (const m of matches) {
+      const depStr = (m.metadata?.dependencies as string) || '';
+      const deps = depStr.split(', ').filter(Boolean);
+      for (const dep of deps) {
+        if (!seen.has(dep)) {
+          depsToFetch.push(dep);
+          seen.add(dep); // prevent duplicate fetches
+        }
+      }
+    }
+    const expanded = await fetchRoutinesByNames([...new Set(depsToFetch)]);
+    console.log(`[graph-expansion] initial=${matches.length} deps_to_fetch=${depsToFetch.length} expanded=${expanded.length}`);
+    const allMatches = [...matches, ...expanded].slice(0, GRAPH_EXPANSION_MAX_CHUNKS);
+
     // Build context
     const systemPrompt = getSystemPrompt(mode as QueryMode, theme);
-    const userMessage = buildUserMessage(sanitizedQuery, matches as { metadata: Record<string, unknown>; score?: number }[]);
+    const userMessage = buildUserMessage(sanitizedQuery, allMatches as { metadata: Record<string, unknown>; score?: number }[]);
 
     // Stream response from GPT-4o-mini
     const stream = await getOpenAI().chat.completions.create({
@@ -70,7 +87,7 @@ export async function POST(req: NextRequest) {
     const readable = new ReadableStream({
       async start(controller) {
         // Send chunks metadata first
-        const chunksData = matches.map((m) => ({
+        const chunksData = allMatches.map((m) => ({
           id: m.id,
           score: m.score,
           metadata: m.metadata,
