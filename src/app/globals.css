@@ -86,6 +86,13 @@
   --ll-on-surface-hover: #2A3A50;
 }
 
+/* ── Joy ── */
+[data-theme="joy"] {
+  --ll-font-display: var(--font-inter);
+  --ll-font-body: var(--font-inter);
+  --ll-font-mono: var(--font-jetbrains-mono);
+}
+
 /* ── Tailwind v4 bridge ── */
 @theme inline {
   --color-ll-surface: var(--ll-surface);
