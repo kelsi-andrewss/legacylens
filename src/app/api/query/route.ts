@@ -1,6 +1,6 @@
-import { NextRequest } from "next/server";
+import { NextRequest, after } from "next/server";
 import { embedQuery, getOpenAI } from "@/lib/openai";
-import { queryPinecone, fetchRoutinesByNames } from "@/lib/pinecone";
+import { queryPinecone, fetchRoutinesByNames, upsertSyntheticChunk } from "@/lib/pinecone";
 import { QueryMode, getSystemPrompt, buildUserMessage } from "@/lib/prompts";
 import { CHAT_MODEL, TEMPERATURE, MAX_TOKENS, DEFAULT_TOP_K, GRAPH_EXPANSION_MAX_CHUNKS } from "@/lib/config";
 import { validateQuery, validateMode, sanitizeString } from "@/lib/validation";
@@ -42,11 +42,12 @@ export async function POST(req: NextRequest) {
     // Embed query
     const embedding = await embedQuery(sanitizedQuery);
 
-    // Search Pinecone
+    // Search Pinecone — synthetic chunks included only for explain mode (most benefit from cached context).
     const matches = await queryPinecone(
       embedding,
       DEFAULT_TOP_K,
-      Object.keys(pineconeFilter).length > 0 ? pineconeFilter : undefined
+      Object.keys(pineconeFilter).length > 0 ? pineconeFilter : undefined,
+      { includeSynthetic: mode === "explain" }
     );
 
     // Graph expansion: fetch direct dependencies of initial results (depth=1)
@@ -58,7 +59,7 @@ export async function POST(req: NextRequest) {
       for (const dep of deps) {
         if (!seen.has(dep)) {
           depsToFetch.push(dep);
-          seen.add(dep); // prevent duplicate fetches
+          seen.add(dep);
         }
       }
     }
@@ -84,6 +85,7 @@ export async function POST(req: NextRequest) {
 
     // Convert to ReadableStream
     const encoder = new TextEncoder();
+    const fullResponse: string[] = [];
     const readable = new ReadableStream({
       async start(controller) {
         // Send chunks metadata first
@@ -96,10 +98,11 @@ export async function POST(req: NextRequest) {
           encoder.encode(`data: ${JSON.stringify({ type: "chunks", data: chunksData })}\n\n`)
         );
 
-        // Stream LLM response
+        // Stream LLM response, buffering for post-response synthetic upsert
         for await (const chunk of stream) {
           const content = chunk.choices[0]?.delta?.content;
           if (content) {
+            fullResponse.push(content);
             controller.enqueue(
               encoder.encode(`data: ${JSON.stringify({ type: "text", data: content })}\n\n`)
             );
@@ -107,6 +110,17 @@ export async function POST(req: NextRequest) {
         }
         controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "done" })}\n\n`));
         controller.close();
+
+        // After the response is sent, cache the LLM answer back to Pinecone as a synthetic chunk.
+        // `after()` runs after the response is flushed but before the serverless function exits.
+        const routineNames = allMatches
+          .map((m) => m.metadata?.subroutine_name as string)
+          .filter(Boolean);
+        after(
+          upsertSyntheticChunk(sanitizedQuery, fullResponse.join(""), routineNames).catch(
+            console.error
+          )
+        );
       },
     });
 
