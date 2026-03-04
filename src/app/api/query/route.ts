@@ -104,6 +104,12 @@ export async function POST(req: NextRequest) {
     const userMessage = buildUserMessage(sanitizedQuery, allMatches as { metadata: Record<string, unknown>; score?: number }[]);
 
     // Stream response from GPT-4o-mini
+    const MODE_MAX_TOKENS: Record<QueryMode, number> = {
+      explain: 2000,
+      dependencies: 2000,
+      docs: 1000,
+      translate: 1000,
+    };
     const stream = await getOpenAI().chat.completions.create({
       model: CHAT_MODEL,
       messages: [
@@ -113,7 +119,7 @@ export async function POST(req: NextRequest) {
       ],
       stream: true,
       temperature: TEMPERATURE,
-      max_tokens: MAX_TOKENS,
+      max_tokens: MODE_MAX_TOKENS[mode as QueryMode],
     });
 
     // Convert to ReadableStream
