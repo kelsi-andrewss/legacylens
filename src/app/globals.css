@@ -355,6 +355,7 @@ body {
   cursor: not-allowed;
 }
 
+<<<<<<< HEAD
 /* ── Joy: Snap-to-Focus Micro-Interactions ── */
 @keyframes specular-glow {
   0%, 100% {
@@ -407,4 +408,18 @@ body {
 
 [data-theme="joy"] .semantic-tracer-card[data-tracer-active] {
   box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.4);
+}
+
+/* ── Joy: Header gradient accents ── */
+[data-theme="joy"] .theme-header {
+  background: var(--ll-surface-variant);
+  border-bottom: 3px solid;
+  border-image: linear-gradient(90deg, #00d4ff, #ff006e) 1;
+}
+
+[data-theme="joy"] .theme-header a.text-2xl {
+  background: linear-gradient(90deg, #00d4ff, #7b61ff, #ff006e);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
