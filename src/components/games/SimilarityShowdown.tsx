@@ -163,7 +163,15 @@ export default function SimilarityShowdown() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ idA: routineA.id, idB: routineB.id }),
         });
+        if (!res.ok) {
+          console.error("Similarity API error:", res.status);
+          return;
+        }
         const data = await res.json();
+        if (typeof data.percentage !== "number") {
+          console.error("Similarity API returned invalid data:", data);
+          return;
+        }
         const pct: number = data.percentage;
 
         setActualScore(pct);

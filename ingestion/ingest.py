@@ -164,13 +164,23 @@ def main():
         texts = [text for _, text in batch]
         print(f"  Embedding batch {batch_start // BATCH_SIZE + 1}/{(len(to_embed) + BATCH_SIZE - 1) // BATCH_SIZE}...")
 
-        try:
-            batch_embeddings = embed_batch(texts)
-        except Exception as e:
-            print(f"  Error embedding batch: {e}")
-            print("  Retrying in 10s...")
-            time.sleep(10)
-            batch_embeddings = embed_batch(texts)
+        batch_num = batch_start // BATCH_SIZE + 1
+        batch_embeddings = None
+        for attempt, delay in enumerate([2, 4, 8], start=1):
+            try:
+                batch_embeddings = embed_batch(texts)
+                break
+            except Exception as e:
+                chunk_ids = [chunks[idx][0] for idx, _ in batch]
+                print(f"  Batch {batch_num} failed (attempt {attempt}/3): {e}")
+                print(f"  Failing chunk IDs: {chunk_ids}")
+                if attempt < 3:
+                    print(f"  Retrying in {delay}s...")
+                    time.sleep(delay)
+        if batch_embeddings is None:
+            print(f"  Batch {batch_num} failed after 3 attempts. Skipping.")
+            print(f"  Resume hint: clear cache entries for the above IDs and re-run.")
+            continue
 
         for (idx, _), emb in zip(batch, batch_embeddings):
             chunk_id = chunks[idx][0]
@@ -200,8 +210,15 @@ def main():
     upsert_batch_size = 100
     for batch_start in range(0, len(vectors), upsert_batch_size):
         batch = vectors[batch_start : batch_start + upsert_batch_size]
-        print(f"  Upserting batch {batch_start // upsert_batch_size + 1}/{(len(vectors) + upsert_batch_size - 1) // upsert_batch_size}...")
-        index.upsert(vectors=batch)
+        upsert_num = batch_start // upsert_batch_size + 1
+        total_upsert_batches = (len(vectors) + upsert_batch_size - 1) // upsert_batch_size
+        print(f"  Upserting batch {upsert_num}/{total_upsert_batches}...")
+        try:
+            index.upsert(vectors=batch)
+        except Exception as e:
+            print(f"  ERROR: Pinecone upsert failed on batch {upsert_num}/{total_upsert_batches}: {e}")
+            print(f"  {batch_start} of {len(vectors)} vectors upserted before failure.")
+            raise
 
     # Verify
     stats = index.describe_index_stats()

@@ -36,10 +36,18 @@ export function shouldTriggerChallenge(stats: { discovered: number }): boolean {
   return stats.discovered > 0 && stats.discovered % 5 === 0;
 }
 
+function fisherYatesShuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 function pickDistractors(correct: string, pool: string[], count: number): string[] {
   const candidates = pool.filter((v) => v !== correct);
-  const shuffled = candidates.sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, count);
+  return fisherYatesShuffle(candidates).slice(0, count);
 }
 
 function shuffleWithAnswer(
@@ -138,7 +146,7 @@ const generators: QuestionGenerator[] = [
  * Falls back to a category question if nothing else works.
  */
 export function generateChallenge(metadata: ChunkMetadata): Challenge {
-  const shuffled = [...generators].sort(() => Math.random() - 0.5);
+  const shuffled = fisherYatesShuffle(generators);
 
   for (const gen of shuffled) {
     const challenge = gen(metadata);

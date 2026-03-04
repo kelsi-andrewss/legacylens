@@ -15,5 +15,8 @@ export async function embedQuery(text: string): Promise<number[]> {
     model: EMBEDDING_MODEL,
     input: text,
   });
+  if (!response.data?.[0]?.embedding) {
+    throw new Error("OpenAI embeddings API returned empty data");
+  }
   return response.data[0].embedding;
 }
