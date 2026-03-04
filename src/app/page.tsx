@@ -6,7 +6,7 @@ import ModeSelector from "@/components/ModeSelector";
 import AnswerStream from "@/components/AnswerStream";
 import CodeSnippet, { type ChunkData } from "@/components/CodeSnippet";
 import Pokedex, { saveRoutineMeta } from "@/components/Pokedex";
-import { markDiscovered, isDiscovered, addXP, getStats } from "@/lib/pokedex";
+import { markDiscovered, isDiscovered, addXP, getStats, markAllAsSeen, hasUnseenDiscoveries } from "@/lib/pokedex";
 import Scratchpad, { type PinnedItem } from "@/components/Scratchpad";
 import ChallengeToast from "@/components/ChallengeToast";
 import { shouldTriggerChallenge, generateChallenge, type Challenge } from "@/lib/challenges";
@@ -39,6 +39,7 @@ export default function Home() {
   const [activeChallenge, setActiveChallenge] = useState<Challenge | null>(null);
   const [activeRoutine, setActiveRoutine] = useState<string | null>(null);
   const [discoveredCount, setDiscoveredCount] = useState(() => getStats().discovered);
+  const [hasUnseen, setHasUnseen] = useState(() => hasUnseenDiscoveries());
 
   const handleRoutineHover = useCallback((name: string | null) => {
     setActiveRoutine(name);
@@ -160,6 +161,7 @@ export default function Home() {
                   }
                 }
                 setDiscoveredCount(getStats().discovered);
+                setHasUnseen(hasUnseenDiscoveries());
                 // Check for challenge trigger after discoveries
                 const stats = getStats();
                 if (shouldTriggerChallenge(stats)) {
@@ -272,7 +274,15 @@ export default function Home() {
           <div className="min-w-0 flex-1 space-y-6">
             <div className="flex items-center justify-end">
               <button
-                onClick={() => setShowPokedex((prev) => !prev)}
+                onClick={() => {
+                setShowPokedex((prev) => {
+                  if (!prev) {
+                    markAllAsSeen();
+                    setHasUnseen(false);
+                  }
+                  return !prev;
+                });
+              }}
                 className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
                   showPokedex
                     ? "bg-ll-primary-container text-ll-on-primary-container"
@@ -284,13 +294,17 @@ export default function Home() {
                 ) : (
                   <>
                     <span>Archive</span>
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
-                      discoveredCount > 0
-                        ? "bg-ll-primary text-ll-surface"
-                        : "bg-ll-surface-tonal text-ll-on-surface-muted"
-                    }`}>
-                      {discoveredCount > 0 ? `${discoveredCount} found` : "start exploring"}
-                    </span>
+                    {hasUnseen ? (
+                      <span className="notification-bubble-shimmer" aria-label="New discoveries" />
+                    ) : (
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+                        discoveredCount > 0
+                          ? "bg-ll-primary text-ll-surface"
+                          : "bg-ll-surface-tonal text-ll-on-surface-muted"
+                      }`}>
+                        {discoveredCount > 0 ? `${discoveredCount} found` : "start exploring"}
+                      </span>
+                    )}
                   </>
                 )}
               </button>

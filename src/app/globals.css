@@ -177,3 +177,31 @@ body {
 .warm-streaming-glow {
   text-shadow: 0 0 12px rgba(255, 179, 71, 0.3);
 }
+
+/* ── Archive button notification bubble ── */
+@keyframes archive-glow {
+  0%, 100% {
+    box-shadow:
+      0 0 4px var(--ll-primary),
+      0 0 8px var(--ll-primary),
+      0 0 16px var(--ll-primary);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow:
+      0 0 8px var(--ll-primary),
+      0 0 20px var(--ll-primary),
+      0 0 32px var(--ll-primary);
+    transform: scale(1.15);
+  }
+}
+
+.notification-bubble-shimmer {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--ll-primary);
+  animation: archive-glow 1.4s ease-in-out infinite;
+  flex-shrink: 0;
+}
