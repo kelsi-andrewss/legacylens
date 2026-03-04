@@ -164,9 +164,7 @@ export default function Home() {
   const tourHighlight = tutorialStep !== null ? TOUR_STEPS[tutorialStep].highlight : undefined;
   const highlightClass = (region: string) => {
     if (tourHighlight !== region) return "";
-    const isAction = tutorialStep !== null && !!TOUR_STEPS[tutorialStep].waitFor;
-    const scrim = "relative z-[50] shadow-[0_0_0_9999px_rgba(0,0,0,0.55)] rounded-lg";
-    return isAction ? `${scrim} ring-2 ring-blue-400 animate-pulse` : scrim;
+    return "relative z-[50] shadow-[0_0_0_9999px_rgba(0,0,0,0.55)] rounded-lg";
   };
 
   return (
