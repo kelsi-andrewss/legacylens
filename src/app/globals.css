@@ -86,6 +86,35 @@
   --ll-on-surface-hover: #2A3A50;
 }
 
+/* ── Joy ── */
+[data-theme="joy"] {
+  --ll-surface: #1a1a2e;
+  --ll-surface-variant: #1e2240;
+  --ll-surface-tonal: #232850;
+  --ll-primary: #00d4ff;
+  --ll-secondary: #ffb347;
+  --ll-on-surface: #e8e6f0;
+  --ll-on-surface-muted: #8b89a0;
+  --ll-on-primary: #0a0a1a;
+  --ll-on-primary-container: #66e5ff;
+  --ll-primary-container: #0d3345;
+  --ll-outline: #3d3b56;
+  --ll-radius-sm: 4px;
+  --ll-radius-md: 8px;
+  --ll-radius-lg: 12px;
+  --ll-font-display: var(--font-ibm-plex-mono);
+  --ll-font-body: var(--font-ibm-plex-sans);
+  --ll-font-mono: var(--font-geist-mono);
+  --ll-primary-hover: #00b8d9;
+  --ll-primary-faint: #0a2a3a;
+  --ll-primary-muted: #0099b8;
+  --ll-on-surface-hover: #f0eef8;
+}
+
+[data-theme="joy"] body {
+  background: linear-gradient(145deg, #1a1a2e 0%, #16213e 100%);
+}
+
 /* ── Tailwind v4 bridge ── */
 @theme inline {
   --color-ll-surface: var(--ll-surface);
