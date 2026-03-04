@@ -11,6 +11,7 @@ import { markDiscovered, isDiscovered, addXP, getStats } from "@/lib/pokedex";
 import Scratchpad, { type PinnedItem } from "@/components/Scratchpad";
 import ChallengeToast from "@/components/ChallengeToast";
 import { shouldTriggerChallenge, generateChallenge, type Challenge } from "@/lib/challenges";
+import SuggestedSearches from "@/components/SuggestedSearches";
 
 const SCRATCHPAD_KEY = "ll-scratchpad";
 
@@ -191,6 +192,11 @@ export default function Home() {
     handleSearch(query, exampleMode);
   };
 
+  const handleSuggestedSelect = useCallback((query: string) => {
+    setExampleQuery(query);
+    handleSearch(query);
+  }, [handleSearch]);
+
   return (
     <div className="min-h-screen bg-ll-surface">
       <main className="mx-auto max-w-6xl px-4 py-8">
@@ -269,6 +275,7 @@ export default function Home() {
               isLoading={isLoading}
               externalQuery={exampleQuery}
             />
+            <SuggestedSearches onSelect={handleSuggestedSelect} />
             <ModeSelector mode={mode} onModeChange={setMode} />
 
             {(answer || isLoading) && (
