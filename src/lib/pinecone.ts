@@ -37,3 +37,43 @@ export async function queryPinecone(
   });
   return results.matches || [];
 }
+
+let cachedIds: string[] | null = null;
+
+export async function getAllRoutineIds(): Promise<string[]> {
+  if (cachedIds) return cachedIds;
+  const index = getIndex();
+  const ids: string[] = [];
+  let paginationToken: string | undefined;
+  do {
+    const page = await index.listPaginated({ limit: 100, paginationToken });
+    if (page.vectors) {
+      for (const v of page.vectors) {
+        if (v.id) ids.push(v.id);
+      }
+    }
+    paginationToken = page.pagination?.next;
+  } while (paginationToken);
+  cachedIds = ids;
+  return ids;
+}
+
+export async function fetchRoutines(ids: string[]) {
+  const index = getIndex();
+  return index.fetch({ ids });
+}
+
+export async function getCosineSimilarity(idA: string, idB: string): Promise<number> {
+  const index = getIndex();
+  const result = await index.fetch({ ids: [idA, idB] });
+  const vecA = result.records[idA]?.values;
+  const vecB = result.records[idB]?.values;
+  if (!vecA || !vecB) throw new Error("Could not fetch vectors");
+  let dot = 0, magA = 0, magB = 0;
+  for (let i = 0; i < vecA.length; i++) {
+    dot += vecA[i] * vecB[i];
+    magA += vecA[i] * vecA[i];
+    magB += vecB[i] * vecB[i];
+  }
+  return dot / (Math.sqrt(magA) * Math.sqrt(magB));
+}
