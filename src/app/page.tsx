@@ -71,6 +71,11 @@ export default function Home() {
     [chunks]
   );
 
+  const nameTokens = useMemo(() => {
+    const tokens = lastQuery.match(/\b[a-zA-Z][a-zA-Z0-9]{3,7}\b/gi) ?? [];
+    return new Set(tokens.map((t) => t.toUpperCase()));
+  }, [lastQuery]);
+
   const handlePin = useCallback((chunk: ChunkData) => {
     setPinnedItems((prev) => {
       if (prev.some((p) => p.id === chunk.id)) return prev;
@@ -397,6 +402,7 @@ export default function Home() {
                       chunk={chunk}
                       onPin={handlePin}
                       isPinned={pinnedIds.has(chunk.id)}
+                      isDirectMatch={nameTokens.has(chunk.metadata.subroutine_name)}
                       activeRoutine={activeRoutine}
                       onRoutineHover={handleRoutineHover}
                       onRoutineClick={handleRoutineClick}
