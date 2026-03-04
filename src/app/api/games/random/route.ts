@@ -4,6 +4,7 @@ import {
   fetchRoutines,
   ChunkMetadata,
 } from "@/lib/pinecone";
+import { validateCount } from "@/lib/validation";
 
 export const runtime = "nodejs";
 
@@ -20,7 +21,7 @@ function fisherYatesSample<T>(arr: readonly T[], count: number): T[] {
 export async function GET(req: NextRequest) {
   try {
     const countParam = req.nextUrl.searchParams.get("count");
-    const count = Math.min(Math.max(parseInt(countParam || "2", 10) || 2, 1), 20);
+    const count = validateCount(countParam);
 
     const allIds = await getAllRoutineIds();
     if (allIds.length === 0) {
