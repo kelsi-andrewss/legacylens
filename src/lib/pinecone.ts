@@ -64,12 +64,8 @@ export async function fetchRoutines(ids: string[]) {
   return index.fetch({ ids });
 }
 
-export async function getCosineSimilarity(idA: string, idB: string): Promise<number> {
-  const index = getIndex();
-  const result = await index.fetch({ ids: [idA, idB] });
-  const vecA = result.records[idA]?.values;
-  const vecB = result.records[idB]?.values;
-  if (!vecA || !vecB) throw new Error("Could not fetch vectors");
+/** Pure cosine similarity between two vectors. */
+export function cosineSimilarity(vecA: number[], vecB: number[]): number {
   let dot = 0, magA = 0, magB = 0;
   for (let i = 0; i < vecA.length; i++) {
     dot += vecA[i] * vecB[i];
@@ -77,4 +73,27 @@ export async function getCosineSimilarity(idA: string, idB: string): Promise<num
     magB += vecB[i] * vecB[i];
   }
   return dot / (Math.sqrt(magA) * Math.sqrt(magB));
+}
+
+/**
+ * Fetch two vectors from Pinecone and compute cosine similarity.
+ * Returns both the score and the fetched records so callers can
+ * extract metadata without a second round-trip.
+ */
+export async function getCosineSimilarityWithRecords(
+  idA: string,
+  idB: string
+): Promise<{ score: number; records: Awaited<ReturnType<ReturnType<Pinecone["index"]>["fetch"]>>["records"] }> {
+  const index = getIndex();
+  const result = await index.fetch({ ids: [idA, idB] });
+  const vecA = result.records[idA]?.values;
+  const vecB = result.records[idB]?.values;
+  if (!vecA || !vecB) throw new Error("Could not fetch vectors");
+  return { score: cosineSimilarity(vecA, vecB), records: result.records };
+}
+
+/** @deprecated Use getCosineSimilarityWithRecords to avoid a double-fetch. */
+export async function getCosineSimilarity(idA: string, idB: string): Promise<number> {
+  const { score } = await getCosineSimilarityWithRecords(idA, idB);
+  return score;
 }

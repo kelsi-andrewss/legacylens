@@ -1,7 +1,6 @@
 import { NextRequest } from "next/server";
 import {
-  getCosineSimilarity,
-  fetchRoutines,
+  getCosineSimilarityWithRecords,
   ChunkMetadata,
 } from "@/lib/pinecone";
 import { validateRoutineId } from "@/lib/validation";
@@ -29,16 +28,13 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const [score, fetched] = await Promise.all([
-      getCosineSimilarity(idA, idB),
-      fetchRoutines([idA, idB]),
-    ]);
+    const { score, records } = await getCosineSimilarityWithRecords(idA, idB);
 
     const nameA =
-      (fetched.records[idA]?.metadata as unknown as ChunkMetadata)
+      (records[idA]?.metadata as unknown as ChunkMetadata)
         ?.subroutine_name ?? idA;
     const nameB =
-      (fetched.records[idB]?.metadata as unknown as ChunkMetadata)
+      (records[idB]?.metadata as unknown as ChunkMetadata)
         ?.subroutine_name ?? idB;
 
     return Response.json({
