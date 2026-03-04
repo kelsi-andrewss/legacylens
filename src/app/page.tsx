@@ -43,8 +43,14 @@ export default function Home() {
   const [pinnedItems, setPinnedItems] = useState<PinnedItem[]>(loadPinnedItems);
   const [activeChallenge, setActiveChallenge] = useState<Challenge | null>(null);
   const [activeRoutine, setActiveRoutine] = useState<string | null>(null);
-  const [discoveredCount, setDiscoveredCount] = useState(() => getStats().discovered);
-  const [hasUnseen, setHasUnseen] = useState(() => hasUnseenDiscoveries());
+  const [discoveredCount, setDiscoveredCount] = useState(0);
+  const [hasUnseen, setHasUnseen] = useState(false);
+
+  useEffect(() => {
+    const stats = getStats();
+    setDiscoveredCount(stats.discovered);
+    setHasUnseen(hasUnseenDiscoveries());
+  }, []);
 
   const handleLensChange = useCallback((newLens: Lens | undefined) => {
     setLens(newLens);
