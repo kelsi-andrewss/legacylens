@@ -22,7 +22,7 @@ function readStoredTheme(): ThemeId {
   const stored = localStorage.getItem(THEME_STORAGE_KEY);
   // Graceful fallback: treat removed "kinetic-obsidian" as "punch-card"
   if (stored === "kinetic-obsidian") return "punch-card";
-  if (stored === "system" || stored === "punch-card" || stored === "blueprint") {
+  if (stored === "system" || stored === "punch-card" || stored === "blueprint" || stored === "joy") {
     return stored;
   }
   return DEFAULT_THEME;

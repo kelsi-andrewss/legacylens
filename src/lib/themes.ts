@@ -1,4 +1,4 @@
-export type ThemeId = "system" | "punch-card" | "blueprint";
+export type ThemeId = "system" | "punch-card" | "blueprint" | "joy";
 
 export interface ThemeMeta {
   id: ThemeId;
@@ -25,6 +25,12 @@ export const THEMES: ThemeMeta[] = [
     name: "Blueprint",
     description: "Engineering draft",
     previewColors: { surface: "#F4F6FA", primary: "#1B3A6B" },
+  },
+  {
+    id: "joy",
+    name: "Joy",
+    description: "Unlocking/Revealing",
+    previewColors: { surface: "#1a1a2e", primary: "#00d4ff" },
   },
 ];
 
