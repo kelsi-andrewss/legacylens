@@ -41,7 +41,7 @@ export default function ThemePicker() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 z-50 bg-ll-surface-variant border border-ll-outline rounded-[var(--ll-radius-md)] shadow-lg min-w-[220px] p-2">
+        <div className="absolute right-0 top-full mt-2 z-[100] bg-ll-surface-variant border border-ll-outline rounded-[var(--ll-radius-md)] shadow-lg min-w-[220px] p-2">
           {THEMES.map((t) => (
             <button
               key={t.id}
@@ -51,7 +51,7 @@ export default function ThemePicker() {
               }}
               className={`w-full flex items-center gap-3 px-3 py-2 rounded-[var(--ll-radius-sm)] text-left transition-colors ${
                 theme === t.id
-                  ? "bg-ll-primary-container"
+                  ? "bg-ll-primary-container text-ll-on-primary-container"
                   : "hover:bg-ll-surface"
               }`}
             >
@@ -81,11 +81,11 @@ export default function ThemePicker() {
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium text-ll-on-surface">{t.name}</div>
-                <div className="text-xs text-ll-on-surface-muted">{t.description}</div>
+                <div className={`text-sm font-medium ${theme !== t.id ? "text-ll-on-surface" : ""}`}>{t.name}</div>
+                <div className={`text-xs ${theme === t.id ? "opacity-80" : "text-ll-on-surface-muted"}`}>{t.description}</div>
               </div>
               {theme === t.id && (
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0 text-ll-primary">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0">
                   <path d="M13.3 4.3 6 11.6 2.7 8.3l1-1L6 9.6l6.3-6.3 1 1Z" fill="currentColor" />
                 </svg>
               )}
