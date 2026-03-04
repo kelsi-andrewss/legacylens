@@ -11,6 +11,7 @@ import Scratchpad, { type PinnedItem } from "@/components/Scratchpad";
 import ChallengeToast from "@/components/ChallengeToast";
 import { shouldTriggerChallenge, generateChallenge, type Challenge } from "@/lib/challenges";
 import SuggestedSearches from "@/components/SuggestedSearches";
+import { Library, X } from "lucide-react";
 
 const SCRATCHPAD_KEY = "ll-scratchpad";
 
@@ -286,28 +287,29 @@ export default function Home() {
                   return !prev;
                 });
               }}
-                className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                className={`relative group overflow-visible flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium ${
                   showPokedex
-                    ? "bg-ll-primary-container text-ll-on-primary-container"
-                    : "border border-ll-outline text-ll-on-surface hover:bg-ll-surface-tonal"
+                    ? "archive-btn-active"
+                    : "archive-btn text-ll-on-surface"
                 }`}
               >
+                {hasUnseen && !showPokedex && (
+                  <span className="notification-bubble-shimmer absolute -top-1.5 -right-1.5" aria-label="New discoveries" />
+                )}
                 {showPokedex ? (
-                  "← Search"
+                  <>
+                    <X size={18} className="rotate-90 transition-transform" />
+                    <span>Close Archive</span>
+                  </>
                 ) : (
                   <>
-                    <span>Archive</span>
-                    {hasUnseen ? (
-                      <span className="notification-bubble-shimmer" aria-label="New discoveries" />
-                    ) : (
-                      <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
-                        discoveredCount > 0
-                          ? "bg-ll-primary text-ll-surface"
-                          : "bg-ll-surface-tonal text-ll-on-surface-muted"
-                      }`}>
-                        {discoveredCount > 0 ? `${discoveredCount} found` : "start exploring"}
+                    <Library size={18} className="group-hover:scale-110 transition-transform" />
+                    <span className="flex flex-col items-start leading-tight">
+                      <span className="font-semibold">Discovery Archive</span>
+                      <span className="hidden sm:block text-xs text-ll-on-surface-muted font-normal">
+                        {discoveredCount > 0 ? `${discoveredCount} discovered` : "start exploring"}
                       </span>
-                    )}
+                    </span>
                   </>
                 )}
               </button>
