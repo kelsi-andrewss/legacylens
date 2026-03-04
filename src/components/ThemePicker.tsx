@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useTheme } from "@/components/ThemeProvider";
 import { THEMES, ThemeId } from "@/lib/themes";
+import { Palette, Check } from "lucide-react";
 
 export default function ThemePicker() {
   const { theme, setTheme } = useTheme();
@@ -41,16 +42,7 @@ export default function ThemePicker() {
         className="text-ll-on-surface-muted hover:text-ll-on-surface transition-colors p-1"
         aria-label="Theme settings"
       >
-        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path
-            d="M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"
-            fill="currentColor"
-          />
-          <path
-            d="M17.43 10.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65a.5.5 0 0 0 .12-.64l-2-3.46a.5.5 0 0 0-.61-.22l-2.49 1a7.3 7.3 0 0 0-1.69-.98l-.38-2.65A.49.49 0 0 0 12 0H8a.49.49 0 0 0-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1a.5.5 0 0 0-.61.22l-2 3.46a.49.49 0 0 0 .12.64l2.11 1.65A8 8 0 0 0 2.5 10c0 .34.03.66.07.98L.46 12.63a.5.5 0 0 0-.12.64l2 3.46a.5.5 0 0 0 .61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.05.24.26.42.49.42h4c.24 0 .44-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1a.5.5 0 0 0 .61-.22l2-3.46a.49.49 0 0 0-.12-.64l-2.11-1.65Z"
-            fill="currentColor"
-          />
-        </svg>
+        <Palette className="w-5 h-5" />
       </button>
 
       {isOpen && pos && (
@@ -102,9 +94,7 @@ export default function ThemePicker() {
                 <div className={`text-xs ${theme === t.id ? "opacity-80" : "text-ll-on-surface-muted"}`}>{t.description}</div>
               </div>
               {theme === t.id && (
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0">
-                  <path d="M13.3 4.3 6 11.6 2.7 8.3l1-1L6 9.6l6.3-6.3 1 1Z" fill="currentColor" />
-                </svg>
+                <Check className="w-4 h-4 shrink-0" />
               )}
             </button>
           ))}

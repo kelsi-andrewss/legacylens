@@ -1,36 +1,42 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import dynamic from "next/dynamic";
+import { Target, Brain, Link, Dices } from "lucide-react";
 
-const GAMES = [
+const GAMES: {
+  id: "similarity" | "quiz" | "connections" | "roulette";
+  title: string;
+  icon: ReactNode;
+  description: string;
+}[] = [
   {
-    id: "similarity" as const,
+    id: "similarity",
     title: "Similarity Showdown",
-    icon: "\uD83C\uDFAF",
+    icon: <Target className="w-5 h-5" />,
     description: "Guess if two LAPACK routines are more or less than 70% similar",
   },
   {
-    id: "quiz" as const,
+    id: "quiz",
     title: "What Routine Are You?",
-    icon: "\uD83E\uDDE0",
+    icon: <Brain className="w-5 h-5" />,
     description: "Take a personality quiz to find your LAPACK spirit routine",
   },
   {
-    id: "connections" as const,
+    id: "connections",
     title: "LAPACK Connections",
-    icon: "\uD83D\uDD17",
+    icon: <Link className="w-5 h-5" />,
     description: "Group 16 routines into 4 categories \u2014 NYT Connections style",
   },
   {
-    id: "roulette" as const,
+    id: "roulette",
     title: "Routine Roulette",
-    icon: "\uD83C\uDFB0",
+    icon: <Dices className="w-5 h-5" />,
     description: "Spin the wheel and discover a random LAPACK routine",
   },
 ];
 
-type GameId = (typeof GAMES)[number]["id"];
+type GameId = "similarity" | "quiz" | "connections" | "roulette";
 
 const gameComponents: Record<GameId, ReturnType<typeof dynamic>> = {
   similarity: dynamic(() => import("@/components/games/SimilarityShowdown"), {
@@ -86,7 +92,7 @@ export default function PlayPage() {
               onClick={() => setActiveGame(game.id)}
               className="rounded-lg border border-ll-outline bg-ll-surface-variant p-6 text-left hover:border-ll-primary transition-colors cursor-pointer"
             >
-              <span className="text-3xl">{game.icon}</span>
+              <span className="text-ll-on-surface-muted">{game.icon}</span>
               <h2 className="mt-3 font-semibold text-ll-on-surface">
                 {game.title}
               </h2>
