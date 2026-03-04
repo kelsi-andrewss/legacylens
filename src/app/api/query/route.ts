@@ -76,23 +76,29 @@ export async function POST(req: NextRequest) {
       return Response.json({ error: "No matching routines found for your query." }, { status: 404 });
     }
 
-    // Graph expansion: fetch direct dependencies of initial results (depth=1)
-    const seen = new Set(filteredMatches.map((m) => (m.metadata?.subroutine_name as string)));
-    const depsToFetch: string[] = [];
-    for (const m of filteredMatches) {
-      const depStr = (m.metadata?.dependencies as string) || '';
-      const deps = depStr.split(', ').filter(Boolean);
-      for (const dep of deps) {
-        if (!seen.has(dep)) {
-          depsToFetch.push(dep);
-          seen.add(dep);
+    // Graph expansion: only for dependencies mode (other modes don't benefit from dep context)
+    let expansionMs = 0;
+    let allMatches = filteredMatches;
+    if (mode === "dependencies") {
+      const seen = new Set(filteredMatches.map((m) => (m.metadata?.subroutine_name as string)));
+      const depsToFetch: string[] = [];
+      for (const m of filteredMatches) {
+        const depStr = (m.metadata?.dependencies as string) || '';
+        const deps = depStr.split(', ').filter(Boolean);
+        for (const dep of deps) {
+          if (!seen.has(dep)) {
+            depsToFetch.push(dep);
+            seen.add(dep);
+          }
         }
       }
+      const expanded = await fetchRoutinesByNames([...new Set(depsToFetch)]);
+      expansionMs = Date.now() - t0 - embedMs - pineconeMs;
+      console.log(`[graph-expansion] initial=${filteredMatches.length} deps_to_fetch=${depsToFetch.length} expanded=${expanded.length}`);
+      allMatches = [...filteredMatches, ...expanded].slice(0, GRAPH_EXPANSION_MAX_CHUNKS);
+    } else {
+      console.log(`[graph-expansion] skipped for mode=${mode}`);
     }
-    const expanded = await fetchRoutinesByNames([...new Set(depsToFetch)]);
-    const expansionMs = Date.now() - t0 - embedMs - pineconeMs;
-    console.log(`[graph-expansion] initial=${filteredMatches.length} deps_to_fetch=${depsToFetch.length} expanded=${expanded.length}`);
-    const allMatches = [...filteredMatches, ...expanded].slice(0, GRAPH_EXPANSION_MAX_CHUNKS);
 
     // Build context
     const userMessage = buildUserMessage(sanitizedQuery, allMatches as { metadata: Record<string, unknown>; score?: number }[]);
