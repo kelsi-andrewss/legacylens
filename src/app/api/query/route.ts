@@ -50,15 +50,13 @@ export async function POST(req: NextRequest) {
       pineconeFilter.subroutine_name = { $in: nameTokens };
     }
 
-    // Embed query — use HyDE for natural language queries with no detected routine names
+    // Embed query — use HyDE to improve semantic similarity for all queries
     let textToEmbed = sanitizedQuery;
-    if (nameTokens.length === 0) {
-      try {
-        const hydeDoc = await generateHypotheticalDocument(sanitizedQuery);
-        if (hydeDoc) textToEmbed = hydeDoc;
-      } catch {
-        // fallback: textToEmbed stays as sanitizedQuery
-      }
+    try {
+      const hydeDoc = await generateHypotheticalDocument(sanitizedQuery);
+      if (hydeDoc) textToEmbed = hydeDoc;
+    } catch {
+      // fallback: textToEmbed stays as sanitizedQuery
     }
     const embedding = await embedQuery(textToEmbed);
     const embedMs = Date.now() - t0;
