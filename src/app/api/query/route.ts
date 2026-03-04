@@ -93,39 +93,50 @@ export async function POST(req: NextRequest) {
     const fullResponse: string[] = [];
     const readable = new ReadableStream({
       async start(controller) {
-        // Send chunks metadata first
-        const chunksData = allMatches.map((m) => ({
-          id: m.id,
-          score: m.score,
-          metadata: m.metadata,
-        }));
-        controller.enqueue(
-          encoder.encode(`data: ${JSON.stringify({ type: "chunks", data: chunksData })}\n\n`)
-        );
+        try {
+          // Send chunks metadata first
+          const chunksData = allMatches.map((m) => ({
+            id: m.id,
+            score: m.score,
+            metadata: m.metadata,
+          }));
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify({ type: "chunks", data: chunksData })}\n\n`)
+          );
 
-        // Stream LLM response, buffering for post-response synthetic upsert
-        for await (const chunk of stream) {
-          const content = chunk.choices[0]?.delta?.content;
-          if (content) {
-            fullResponse.push(content);
-            controller.enqueue(
-              encoder.encode(`data: ${JSON.stringify({ type: "text", data: content })}\n\n`)
+          // Stream LLM response, buffering for post-response synthetic upsert
+          for await (const chunk of stream) {
+            const content = chunk.choices[0]?.delta?.content;
+            if (content) {
+              fullResponse.push(content);
+              controller.enqueue(
+                encoder.encode(`data: ${JSON.stringify({ type: "text", data: content })}\n\n`)
+              );
+            }
+          }
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "done" })}\n\n`));
+          controller.close();
+        } catch (error) {
+          const message = error instanceof Error ? error.message : "Stream error";
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify({ type: "error", data: message })}\n\n`)
+          );
+          controller.close();
+        } finally {
+          // After the response is sent, cache the LLM answer back to Pinecone as a synthetic chunk.
+          // Only upsert if the stream produced content — skip on error before any LLM output.
+          // `after()` runs after the response is flushed but before the serverless function exits.
+          if (fullResponse.length > 0) {
+            const routineNames = allMatches
+              .map((m) => m.metadata?.subroutine_name as string)
+              .filter(Boolean);
+            after(
+              upsertSyntheticChunk(sanitizedQuery, fullResponse.join(""), routineNames).catch(
+                console.error
+              )
             );
           }
         }
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "done" })}\n\n`));
-        controller.close();
-
-        // After the response is sent, cache the LLM answer back to Pinecone as a synthetic chunk.
-        // `after()` runs after the response is flushed but before the serverless function exits.
-        const routineNames = allMatches
-          .map((m) => m.metadata?.subroutine_name as string)
-          .filter(Boolean);
-        after(
-          upsertSyntheticChunk(sanitizedQuery, fullResponse.join(""), routineNames).catch(
-            console.error
-          )
-        );
       },
     });
 

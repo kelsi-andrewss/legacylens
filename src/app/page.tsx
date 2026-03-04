@@ -169,6 +169,9 @@ export default function Home() {
                 }
               } else if (event.type === "text") {
                 setAnswer((prev) => prev + event.data);
+              } else if (event.type === "error") {
+                setAnswer(event.data as string);
+                setIsLoading(false);
               }
             } catch {
               // skip malformed
