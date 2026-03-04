@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import { EMBEDDING_MODEL } from "@/lib/config";
 
 let client: OpenAI | null = null;
 
@@ -11,7 +12,7 @@ export function getOpenAI(): OpenAI {
 
 export async function embedQuery(text: string): Promise<number[]> {
   const response = await getOpenAI().embeddings.create({
-    model: "text-embedding-3-small",
+    model: EMBEDDING_MODEL,
     input: text,
   });
   return response.data[0].embedding;

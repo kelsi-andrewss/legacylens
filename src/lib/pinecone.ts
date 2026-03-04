@@ -1,4 +1,5 @@
 import { Pinecone } from "@pinecone-database/pinecone";
+import { DEFAULT_TOP_K, PINECONE_INDEX_NAME } from "@/lib/config";
 
 let client: Pinecone | null = null;
 let _index: ReturnType<Pinecone["index"]> | null = null;
@@ -6,7 +7,7 @@ let _index: ReturnType<Pinecone["index"]> | null = null;
 function getIndex() {
   if (!_index) {
     client = new Pinecone({ apiKey: process.env.PINECONE_API_KEY! });
-    _index = client.index(process.env.PINECONE_INDEX || "legacylens");
+    _index = client.index(process.env.PINECONE_INDEX || PINECONE_INDEX_NAME);
   }
   return _index;
 }
@@ -26,7 +27,7 @@ export interface ChunkMetadata {
 
 export async function queryPinecone(
   embedding: number[],
-  topK: number = 5,
+  topK: number = DEFAULT_TOP_K,
   filter?: Record<string, unknown>
 ) {
   const results = await getIndex().query({
