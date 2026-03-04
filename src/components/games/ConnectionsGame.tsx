@@ -56,16 +56,31 @@ function pickPuzzle(): ConnectionsPuzzle | null {
   return available[Math.floor(Math.random() * available.length)];
 }
 
+function getInitialPuzzleState(): {
+  puzzle: ConnectionsPuzzle | null;
+  shuffledNames: string[];
+  allCompleted: boolean;
+} {
+  const p = pickPuzzle();
+  if (!p) {
+    return { puzzle: null, shuffledNames: [], allCompleted: true };
+  }
+  const names = p.categories.flatMap((c) => c.routines);
+  return { puzzle: p, shuffledNames: shuffle(names), allCompleted: false };
+}
+
+const INITIAL_STATE = typeof window !== "undefined" ? getInitialPuzzleState() : null;
+
 export default function ConnectionsGame() {
-  const [puzzle, setPuzzle] = useState<ConnectionsPuzzle | null>(null);
+  const [puzzle, setPuzzle] = useState<ConnectionsPuzzle | null>(() => INITIAL_STATE?.puzzle ?? null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [found, setFound] = useState<ConnectionsCategory[]>([]);
   const [mistakes, setMistakes] = useState(0);
-  const [shuffledNames, setShuffledNames] = useState<string[]>([]);
+  const [shuffledNames, setShuffledNames] = useState<string[]>(() => INITIAL_STATE?.shuffledNames ?? []);
   const [gameOver, setGameOver] = useState(false);
   const [won, setWon] = useState(false);
   const [shaking, setShaking] = useState(false);
-  const [allCompleted, setAllCompleted] = useState(false);
+  const [allCompleted, setAllCompleted] = useState(() => INITIAL_STATE?.allCompleted ?? false);
 
   const shakingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const newPuzzleRef = useRef<HTMLButtonElement>(null);
@@ -89,11 +104,10 @@ export default function ConnectionsGame() {
   }, []);
 
   useEffect(() => {
-    initPuzzle();
     return () => {
       if (shakingTimerRef.current) clearTimeout(shakingTimerRef.current);
     };
-  }, [initPuzzle]);
+  }, []);
 
   // Focus "New Puzzle" button when game ends
   useEffect(() => {
@@ -173,7 +187,7 @@ export default function ConnectionsGame() {
       <div className="flex flex-col items-center gap-4 py-8">
         <h2 className="text-xl font-bold">All puzzles completed!</h2>
         <p className="text-ll-on-surface-muted">
-          You've solved every LAPACK Connections puzzle. Check back later for
+          You&apos;ve solved every LAPACK Connections puzzle. Check back later for
           more.
         </p>
       </div>

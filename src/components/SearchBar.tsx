@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FormEvent, useEffect } from "react";
+import { useState, FormEvent } from "react";
 import { useTheme } from "@/components/ThemeProvider";
 import { Search, Loader2 } from "lucide-react";
 
@@ -13,12 +13,14 @@ interface SearchBarProps {
 export default function SearchBar({ onSearch, isLoading, externalQuery }: SearchBarProps) {
   const [query, setQuery] = useState("");
   const { resolvedTheme } = useTheme();
+  const [prevExternalQuery, setPrevExternalQuery] = useState(externalQuery);
 
-  useEffect(() => {
+  if (externalQuery !== prevExternalQuery) {
+    setPrevExternalQuery(externalQuery);
     if (externalQuery !== undefined) {
       setQuery(externalQuery);
     }
-  }, [externalQuery]);
+  }
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();

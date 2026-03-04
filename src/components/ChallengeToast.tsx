@@ -18,9 +18,12 @@ export default function ChallengeToast({ challenge, onComplete }: ChallengeToast
   const [visible, setVisible] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onCompleteRef = useRef(onComplete);
-  onCompleteRef.current = onComplete;
   const challengeRef = useRef(challenge);
-  challengeRef.current = challenge;
+
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+    challengeRef.current = challenge;
+  }, [onComplete, challenge]);
 
   // Animate in on mount
   useEffect(() => {

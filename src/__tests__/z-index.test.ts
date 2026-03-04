@@ -8,7 +8,6 @@ const read = (rel: string) => readFileSync(join(SRC, rel), "utf-8");
 describe("z-index hierarchy", () => {
   const globals = read("app/globals.css");
   const themePicker = read("components/ThemePicker.tsx");
-  const toast = read("components/ChallengeToast.tsx");
   const scratchpad = read("components/Scratchpad.tsx");
 
   test("no body > * rule that sets z-index (stacking context factory)", () => {

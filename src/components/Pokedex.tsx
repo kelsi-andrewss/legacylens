@@ -71,11 +71,19 @@ export default function Pokedex() {
     return () => window.removeEventListener("storage", onStorage);
   }, []);
 
-  // Also refresh when the component re-renders (toggle open)
-  useEffect(() => {
-    setEntries(loadEntries());
-    setStats(getStats());
-  }, []);
+  // Sync from localStorage on each render (e.g. when panel toggles open).
+  // Conditional setState during render is the React 19 pattern for
+  // "adjusting state based on external data" without an effect.
+  const latestEntries = loadEntries();
+  const latestStats = getStats();
+  if (
+    entries.length !== latestEntries.length ||
+    stats.discovered !== latestStats.discovered ||
+    stats.xp !== latestStats.xp
+  ) {
+    setEntries(latestEntries);
+    setStats(latestStats);
+  }
 
   const filtered = useMemo(() => {
     if (!search) return entries;

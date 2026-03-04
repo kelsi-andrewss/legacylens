@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useTheme } from "@/components/ThemeProvider";
-import { THEMES, ThemeId } from "@/lib/themes";
+import { THEMES } from "@/lib/themes";
 import { Palette, Check } from "lucide-react";
 
 export default function ThemePicker() {

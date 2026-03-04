@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useSyncExternalStore } from "react";
 import { ThemeId, DEFAULT_THEME, THEME_STORAGE_KEY } from "@/lib/themes";
 
 interface ThemeContextValue {
@@ -28,10 +28,16 @@ function readStoredTheme(): ThemeId {
   return DEFAULT_THEME;
 }
 
+const subscribe = () => () => {};
+const getSnapshot = () => true;
+const getServerSnapshot = () => false;
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [mounted, setMounted] = useState(false);
-  const [theme, setThemeState] = useState<ThemeId>(DEFAULT_THEME);
-  const [systemIsDark, setSystemIsDark] = useState(false);
+  const mounted = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const [theme, setThemeState] = useState<ThemeId>(() => readStoredTheme());
+  const [systemIsDark, setSystemIsDark] = useState(() =>
+    typeof window !== "undefined" ? window.matchMedia(MEDIA_QUERY).matches : false
+  );
 
   const resolvedTheme = mounted
     ? theme === "system" ? resolveSystemTheme(systemIsDark) : theme
@@ -42,18 +48,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(THEME_STORAGE_KEY, t);
   }, []);
 
-  // Hydration gate: read stored theme and system preference after mount
+  // Apply theme to document after mount
   useEffect(() => {
-    setThemeState(readStoredTheme());
-    setSystemIsDark(window.matchMedia(MEDIA_QUERY).matches);
-    setMounted(true);
-  }, []);
-
-  // Apply theme to document only after mount
-  useEffect(() => {
-    if (!mounted) return;
     document.documentElement.dataset.theme = resolvedTheme;
-  }, [mounted, resolvedTheme]);
+  }, [resolvedTheme]);
 
   // Listen for system color scheme changes
   useEffect(() => {
