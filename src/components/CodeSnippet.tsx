@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Maximize2, Minimize2 } from "lucide-react";
 import { Light as SyntaxHighlighter } from "react-syntax-highlighter";
 import fortran from "react-syntax-highlighter/dist/esm/languages/hljs/fortran";
 import { atomOneDark } from "react-syntax-highlighter/dist/esm/styles/hljs";
@@ -38,6 +38,10 @@ interface CodeSnippetProps {
 export default function CodeSnippet({ chunk, onPin, isPinned, activeRoutine, onRoutineHover, onRoutineClick }: CodeSnippetProps) {
   const { metadata: m, score } = chunk;
   const [showPinConfirm, setShowPinConfirm] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const [fullSource, setFullSource] = useState<string | null>(null);
+  const [sourceLoading, setSourceLoading] = useState(false);
+  const [sourceError, setSourceError] = useState<string | null>(null);
 
   const handlePin = useCallback(() => {
     if (isPinned || !onPin) return;
@@ -46,6 +50,38 @@ export default function CodeSnippet({ chunk, onPin, isPinned, activeRoutine, onR
     const timer = setTimeout(() => setShowPinConfirm(false), 1500);
     return () => clearTimeout(timer);
   }, [chunk, onPin, isPinned]);
+
+  const handleExpandToggle = useCallback(() => {
+    const filePath = m.file_path;
+    if (fullSource !== null) {
+      setExpanded((prev) => !prev);
+      return;
+    }
+    setExpanded(true);
+    setSourceLoading(true);
+    setSourceError(null);
+    fetch(`/api/source?path=${encodeURIComponent(filePath)}`)
+      .then((res) => {
+        if (!res.ok) {
+          return res.json().then((body: { error?: string }) => {
+            throw new Error(body.error ?? `HTTP ${res.status}`);
+          });
+        }
+        return res.json() as Promise<{ content: string }>;
+      })
+      .then((data) => {
+        setFullSource(data.content);
+      })
+      .catch((err: unknown) => {
+        const message = err instanceof Error ? err.message : "Failed to load source";
+        setSourceError(message);
+        setExpanded(false);
+      })
+      .finally(() => {
+        setSourceLoading(false);
+      });
+  }, [m.file_path, fullSource]);
+
   const relevance = (score * 100).toFixed(1);
   const githubUrl = `https://github.com/Reference-LAPACK/lapack/blob/master/${m.file_path}#L${m.line_start}`;
   const isTracerActive = activeRoutine === m.subroutine_name;
@@ -103,6 +139,22 @@ export default function CodeSnippet({ chunk, onPin, isPinned, activeRoutine, onR
               {showPinConfirm ? "Pinned!" : isPinned ? "Pinned" : "Pin"}
             </button>
           )}
+          <button
+            onClick={handleExpandToggle}
+            disabled={sourceLoading}
+            className="text-xs text-ll-on-surface-muted hover:text-ll-on-surface transition-colors flex items-center gap-1"
+            title={expanded ? "Collapse full source" : "View full source file"}
+          >
+            {expanded ? (
+              <>
+                Collapse <Minimize2 className="inline h-3 w-3" />
+              </>
+            ) : (
+              <>
+                Full Source <Maximize2 className="inline h-3 w-3" />
+              </>
+            )}
+          </button>
           <a
             href={githubUrl}
             target="_blank"
@@ -170,6 +222,38 @@ export default function CodeSnippet({ chunk, onPin, isPinned, activeRoutine, onR
         >
           {m.text}
         </SyntaxHighlighter>
+      </div>
+
+      <div
+        className={`overflow-hidden transition-all duration-300 ${
+          expanded && fullSource ? "max-h-[600px]" : "max-h-0"
+        }`}
+      >
+        {sourceLoading && (
+          <div className="px-4 py-3 text-xs text-ll-on-surface-muted border-t border-ll-outline">
+            Loading full source...
+          </div>
+        )}
+        {sourceError && (
+          <div className="px-4 py-3 text-xs text-red-500 border-t border-ll-outline">
+            Error: {sourceError}
+          </div>
+        )}
+        {fullSource && (
+          <div className="border-t border-ll-outline max-h-[600px] overflow-y-auto overflow-x-auto">
+            <SyntaxHighlighter
+              language="fortran"
+              style={atomOneDark}
+              showLineNumbers
+              startingLineNumber={1}
+              customStyle={{ margin: 0, borderRadius: 0, fontSize: "0.8rem" }}
+              wrapLongLines={false}
+              codeTagProps={{ className: "min-w-full break-words" }}
+            >
+              {fullSource}
+            </SyntaxHighlighter>
+          </div>
+        )}
       </div>
     </div>
   );
