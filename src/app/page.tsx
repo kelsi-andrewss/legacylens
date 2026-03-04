@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import SearchBar from "@/components/SearchBar";
 import ModeSelector from "@/components/ModeSelector";
 import AnswerStream from "@/components/AnswerStream";
 import CodeSnippet from "@/components/CodeSnippet";
+import TutorialBanner, { TOUR_STEPS } from "@/components/TutorialBanner";
 
 interface ChunkData {
   id: string;
@@ -30,6 +31,8 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
+  const [tutorialStep, setTutorialStep] = useState<number | null>(null);
+  const [tutorialPendingQuery, setTutorialPendingQuery] = useState<string | null>(null);
 
   const handleSearch = useCallback(
     async (query: string) => {
@@ -91,6 +94,39 @@ export default function Home() {
     [mode, categoryFilter, typeFilter]
   );
 
+  // Phase 1 effect: fires when tutorialStep changes — sets mode, clears results, queues query
+  useEffect(() => {
+    if (tutorialStep === null) return;
+    const step = TOUR_STEPS[tutorialStep];
+    setMode(step.mode);
+    setAnswer("");
+    setChunks([]);
+    setTutorialPendingQuery(step.query);
+  }, [tutorialStep]);
+
+  // Phase 2 effect: fires when mode or tutorialPendingQuery changes — executes search once mode matches
+  useEffect(() => {
+    if (tutorialPendingQuery === null || tutorialStep === null) return;
+    if (mode !== TOUR_STEPS[tutorialStep].mode) return;
+    const query = tutorialPendingQuery;
+    setTutorialPendingQuery(null);
+    const timer = setTimeout(() => handleSearch(query), 500);
+    return () => clearTimeout(timer);
+  }, [mode, tutorialPendingQuery, tutorialStep, handleSearch]);
+
+  // Auto-advance effect: fires when loading completes with a result during tour
+  useEffect(() => {
+    if (tutorialStep === null || isLoading || answer.length === 0) return;
+    const timer = setTimeout(() => {
+      if (tutorialStep < TOUR_STEPS.length - 1) {
+        setTutorialStep((t) => (t !== null ? t + 1 : null));
+      } else {
+        setTutorialStep(null);
+      }
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [isLoading, answer, tutorialStep]);
+
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
       <header className="border-b border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
@@ -101,8 +137,25 @@ export default function Home() {
           <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
             RAG-powered LAPACK/BLAS code explorer — Ask questions about 600K+ lines of Fortran
           </p>
+          <button
+            onClick={() => { setTutorialStep(0); setCategoryFilter(""); setTypeFilter(""); }}
+            className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-blue-200 bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-700 transition-colors hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-300 dark:hover:bg-blue-900/40"
+          >
+            ▶ Start Tour
+          </button>
         </div>
       </header>
+
+      {tutorialStep !== null && (
+        <TutorialBanner
+          step={tutorialStep}
+          onNext={() => {
+            if (tutorialStep < TOUR_STEPS.length - 1) setTutorialStep((t) => (t !== null ? t + 1 : null));
+            else setTutorialStep(null);
+          }}
+          onExit={() => setTutorialStep(null)}
+        />
+      )}
 
       <main className="mx-auto max-w-6xl px-4 py-8">
         <div className="flex gap-8">
@@ -158,7 +211,11 @@ export default function Home() {
 
           {/* Main content */}
           <div className="min-w-0 flex-1 space-y-6">
-            <SearchBar onSearch={handleSearch} isLoading={isLoading} />
+            <SearchBar
+              onSearch={handleSearch}
+              isLoading={isLoading}
+              externalQuery={tutorialStep !== null ? TOUR_STEPS[tutorialStep].query : undefined}
+            />
             <ModeSelector mode={mode} onModeChange={setMode} />
 
             {(answer || isLoading) && (
