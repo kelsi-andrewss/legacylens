@@ -13,7 +13,7 @@ export default function Header() {
   const pathname = usePathname();
 
   return (
-    <header className="border-b border-ll-outline bg-ll-surface-variant">
+    <header className="theme-header border-b border-ll-outline bg-ll-surface-variant">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
         <div>
           <Link href="/" className="text-2xl font-bold text-ll-on-surface">
