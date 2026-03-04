@@ -49,7 +49,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" data-theme="kinetic-obsidian">
+    <html lang="en" data-theme="punch-card">
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${ibmPlexMono.variable} ${ibmPlexSans.variable} ${spaceGrotesk.variable} ${archivoNarrow.variable} antialiased`}
       >
