@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Compass, Gamepad2 } from "lucide-react";
 import ThemePicker from "@/components/ThemePicker";
 
 const navLinks = [
-  { href: "/", label: "Explore" },
-  { href: "/play", label: "Play" },
+  { href: "/", label: "Explore", icon: Compass },
+  { href: "/play", label: "Play", icon: Gamepad2 },
 ];
 
 export default function Header() {
@@ -25,18 +26,19 @@ export default function Header() {
         </div>
         <div className="flex items-center gap-4">
           <nav className="flex gap-1">
-            {navLinks.map(({ href, label }) => {
+            {navLinks.map(({ href, label, icon: Icon }) => {
               const isActive = pathname === href;
               return (
                 <Link
                   key={href}
                   href={href}
-                  className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                  className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
                     isActive
                       ? "bg-ll-primary-container text-ll-on-primary-container"
                       : "text-ll-on-surface-muted hover:bg-ll-surface-tonal"
                   }`}
                 >
+                  <Icon className="h-4 w-4" />
                   {label}
                 </Link>
               );
