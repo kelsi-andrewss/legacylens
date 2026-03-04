@@ -2,46 +2,83 @@ import type { QueryMode } from "@/lib/prompts";
 
 export interface TourStep {
   mode: QueryMode;
-  query: string;
+  query: string | null; // null = commentary-only, keep previous result visible
   title: string;
   commentary: string;
+  highlight?: "search" | "mode" | "chunks" | "sidebar" | "answer";
+  filters?: { category?: string; dataType?: string };
 }
 
 export const TOUR_STEPS: TourStep[] = [
   {
     mode: "explain",
     query: "What does DGESV do?",
-    title: "Basic Explanation",
+    title: "Ask in Plain English",
     commentary:
-      "DGESV is LAPACK's workhorse linear solver. Ask anything in plain English — LegacyLens retrieves the relevant subroutines and explains them.",
+      "DGESV is LAPACK's core linear solver. Ask any question in natural language — LegacyLens searches 7,759 code vectors across 2,329 Fortran files and returns the most relevant routines.",
+    highlight: "search",
+    filters: {},
+  },
+  {
+    mode: "explain",
+    query: null,
+    title: "Retrieved Source Code",
+    commentary:
+      "These cards are the actual Fortran subroutines LegacyLens retrieved. Each shows the routine name, LAPACK/BLAS category, relevance match %, and a direct link to the source on GitHub. Press Next when ready.",
+    highlight: "chunks",
   },
   {
     mode: "dependencies",
     query: "What does DGETRF call?",
     title: "Dependency Mapping",
     commentary:
-      "Dependency mode maps the call graph. DGETRF (LU factorization) chains into BLAS routines — see exactly what calls what.",
+      "Switch to Dependencies mode — the same natural-language question now maps the call graph. DGETRF (LU factorization) chains into DTRSM, DLASWP, and DGEMM. Every subroutine, every edge.",
+    highlight: "mode",
+    filters: {},
   },
   {
     mode: "docs",
-    query: "Generate documentation for DAXPY",
+    query: "Generate documentation for DPOTRF",
     title: "Documentation Gen",
     commentary:
-      "Documentation mode produces structured docs for any routine — useful for undocumented or poorly-commented code.",
+      "Documentation mode generates structured docs for any routine — name, purpose, parameters, return values, side effects. Ideal for code that was never properly documented.",
+    highlight: "answer",
+    filters: {},
   },
   {
     mode: "translate",
     query: "How would I write DGEMM in Python?",
-    title: "Translation Hints",
+    title: "Modern Equivalents",
     commentary:
-      "Translation mode suggests modern NumPy/SciPy equivalents with behavioral notes (column-major vs row-major, etc.).",
+      "Translation mode maps Fortran routines to NumPy/SciPy equivalents, with notes on behavioral differences — like column-major vs row-major layout that causes subtle bugs in ported code.",
+    highlight: "answer",
+    filters: {},
+  },
+  {
+    mode: "translate",
+    query: null,
+    title: "Filter by Library",
+    commentary:
+      "The sidebar narrows results by library (LAPACK or BLAS) and numeric precision (single, double, complex, double complex). BLAS is now selected — it applies to the next query. Press Next when ready.",
+    highlight: "sidebar",
+    filters: { category: "BLAS" },
+  },
+  {
+    mode: "explain",
+    query: "What are BLAS matrix-vector operations?",
+    title: "Filtered Search",
+    commentary:
+      "Filtering to BLAS only — every retrieved chunk is a BLAS routine. Combine library and precision filters with any question to zero in on exactly the code you need.",
+    highlight: "chunks",
   },
   {
     mode: "explain",
     query: "Show me error handling patterns in LAPACK",
     title: "Cross-cutting Search",
     commentary:
-      "Cross-cutting query — LegacyLens finds patterns across the entire codebase, not just single routines.",
+      "LegacyLens isn't limited to single routines. Cross-cutting queries find patterns across the entire codebase — error conventions, argument validation, return code standards.",
+    highlight: "answer",
+    filters: { category: "" },
   },
 ];
 

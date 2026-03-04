@@ -94,10 +94,13 @@ export default function Home() {
     [mode, categoryFilter, typeFilter]
   );
 
-  // Phase 1 effect: fires when tutorialStep changes — sets mode, clears results, queues query
+  // Phase 1 effect: fires when tutorialStep changes — applies filters, sets mode, clears results, queues query
   useEffect(() => {
     if (tutorialStep === null) return;
     const step = TOUR_STEPS[tutorialStep];
+    if (step.filters?.category !== undefined) setCategoryFilter(step.filters.category);
+    if (step.filters?.dataType !== undefined) setTypeFilter(step.filters.dataType);
+    if (step.query === null) return; // commentary-only: keep existing results visible
     setMode(step.mode);
     setAnswer("");
     setChunks([]);
@@ -115,8 +118,10 @@ export default function Home() {
   }, [mode, tutorialPendingQuery, tutorialStep, handleSearch]);
 
   // Auto-advance effect: fires when loading completes with a result during tour
+  // Null-query steps are skipped — "Next →" is the only way to advance them
   useEffect(() => {
     if (tutorialStep === null || isLoading || answer.length === 0) return;
+    if (TOUR_STEPS[tutorialStep].query === null) return;
     const timer = setTimeout(() => {
       if (tutorialStep < TOUR_STEPS.length - 1) {
         setTutorialStep((t) => (t !== null ? t + 1 : null));
@@ -126,6 +131,10 @@ export default function Home() {
     }, 3000);
     return () => clearTimeout(timer);
   }, [isLoading, answer, tutorialStep]);
+
+  const tourHighlight = tutorialStep !== null ? TOUR_STEPS[tutorialStep].highlight : undefined;
+  const highlightClass = (region: string) =>
+    tourHighlight === region ? "ring-2 ring-blue-400 ring-offset-2 rounded-lg transition-all duration-300" : "";
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
@@ -160,7 +169,7 @@ export default function Home() {
       <main className="mx-auto max-w-6xl px-4 py-8">
         <div className="flex gap-8">
           {/* Sidebar filters */}
-          <aside className="hidden w-48 shrink-0 lg:block">
+          <aside className={`hidden w-48 shrink-0 lg:block ${highlightClass("sidebar")}`}>
             <div className="sticky top-8 space-y-6">
               <div>
                 <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
@@ -211,19 +220,25 @@ export default function Home() {
 
           {/* Main content */}
           <div className="min-w-0 flex-1 space-y-6">
-            <SearchBar
-              onSearch={handleSearch}
-              isLoading={isLoading}
-              externalQuery={tutorialStep !== null ? TOUR_STEPS[tutorialStep].query : undefined}
-            />
-            <ModeSelector mode={mode} onModeChange={setMode} />
+            <div className={highlightClass("search")}>
+              <SearchBar
+                onSearch={handleSearch}
+                isLoading={isLoading}
+                externalQuery={tutorialStep !== null ? (TOUR_STEPS[tutorialStep].query ?? undefined) : undefined}
+              />
+            </div>
+            <div className={highlightClass("mode")}>
+              <ModeSelector mode={mode} onModeChange={setMode} />
+            </div>
 
             {(answer || isLoading) && (
-              <AnswerStream content={answer} isStreaming={isLoading} />
+              <div className={highlightClass("answer")}>
+                <AnswerStream content={answer} isStreaming={isLoading} />
+              </div>
             )}
 
             {chunks.length > 0 && (
-              <div className="space-y-4">
+              <div className={`space-y-4 ${highlightClass("chunks")}`}>
                 <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
                   Retrieved Code ({chunks.length} chunks)
                 </h2>
