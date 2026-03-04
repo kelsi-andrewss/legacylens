@@ -29,6 +29,7 @@ export async function POST(req: NextRequest) {
     }
 
     const sanitizedQuery = sanitizeString(query);
+    const sanitizedTheme = theme ? sanitizeString(theme) : undefined;
 
     // Build Pinecone filter
     const pineconeFilter: Record<string, unknown> = {};
@@ -87,7 +88,7 @@ export async function POST(req: NextRequest) {
     const allMatches = [...filteredMatches, ...expanded].slice(0, GRAPH_EXPANSION_MAX_CHUNKS);
 
     // Build context
-    const systemPrompt = getSystemPrompt(mode as QueryMode, theme);
+    const systemPrompt = getSystemPrompt(mode as QueryMode, sanitizedTheme);
     const userMessage = buildUserMessage(sanitizedQuery, allMatches as { metadata: Record<string, unknown>; score?: number }[]);
 
     // Stream response from GPT-4o-mini
