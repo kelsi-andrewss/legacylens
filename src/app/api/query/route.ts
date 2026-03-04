@@ -11,10 +11,11 @@ export const maxDuration = 30;
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { query, mode = "explain", filters } = body as {
+    const { query, mode = "explain", filters, theme } = body as {
       query: string;
       mode?: QueryMode;
       filters?: { category?: string; data_type_prefix?: string };
+      theme?: string;
     };
 
     const queryResult = validateQuery(query);
@@ -49,7 +50,7 @@ export async function POST(req: NextRequest) {
     );
 
     // Build context
-    const systemPrompt = getSystemPrompt(mode as QueryMode);
+    const systemPrompt = getSystemPrompt(mode as QueryMode, theme);
     const userMessage = buildUserMessage(sanitizedQuery, matches as { metadata: Record<string, unknown>; score?: number }[]);
 
     // Stream response from GPT-4o-mini
