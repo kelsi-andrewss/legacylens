@@ -2,7 +2,7 @@ name: Deploy to Vercel
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
   pull_request:
     branches: [main]
 
@@ -42,11 +42,9 @@ jobs:
           fi
 
           echo "project_id=$PROJECT_ID" >> $GITHUB_OUTPUT
-          echo "Project ID: $PROJECT_ID"
 
       - name: Deploy to Vercel
         run: |
-          # Trim any whitespace/newlines from secrets
           ORG_ID=$(echo "${{ secrets.VERCEL_ORG_ID }}" | tr -d '[:space:]')
           PROJECT_ID="${{ steps.vercel-project.outputs.project_id }}"
 
@@ -56,9 +54,11 @@ jobs:
             --env PINECONE_INDEX=$PINECONE_INDEX \
             --token=${{ secrets.VERCEL_TOKEN }}"
 
-          if [ "${{ github.ref }}" = "refs/heads/main" ] && [ "${{ github.event_name }}" = "push" ]; then
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            echo "Deploying to production..."
             VERCEL_ORG_ID="$ORG_ID" VERCEL_PROJECT_ID="$PROJECT_ID" vercel deploy $DEPLOY_ARGS --prod
           else
+            echo "Deploying preview..."
             VERCEL_ORG_ID="$ORG_ID" VERCEL_PROJECT_ID="$PROJECT_ID" vercel deploy $DEPLOY_ARGS
           fi
         env:
