@@ -140,6 +140,9 @@ def main():
                 "data_type_prefix": routine.data_type_prefix,
                 "category": routine.category,
                 "text": part[:9500],  # Pinecone metadata text limit
+                "invariants": routine.invariants[:500],
+                "constraints": routine.constraints[:500],
+                "error_codes": routine.error_codes[:500],
             }
             chunks.append((chunk_id, part, metadata))
     print(f"Created {len(chunks)} chunks")
