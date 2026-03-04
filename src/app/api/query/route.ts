@@ -50,6 +50,11 @@ export async function POST(req: NextRequest) {
       { includeSynthetic: mode === "explain" }
     );
 
+    // Guard: no results from Pinecone — skip LLM call entirely
+    if (matches.length === 0) {
+      return Response.json({ error: "No matching routines found for your query." }, { status: 404 });
+    }
+
     // Graph expansion: fetch direct dependencies of initial results (depth=1)
     const seen = new Set(matches.map((m) => (m.metadata?.subroutine_name as string)));
     const depsToFetch: string[] = [];
