@@ -2,21 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 
 const WINDOW_MS = 60_000;
 const MAX_REQUESTS = 10;
-const CLEANUP_INTERVAL_MS = 5 * 60_000;
 
 const requestLog = new Map<string, number[]>();
-
-setInterval(() => {
-  const cutoff = Date.now() - WINDOW_MS;
-  for (const [ip, timestamps] of requestLog.entries()) {
-    const recent = timestamps.filter((t) => t > cutoff);
-    if (recent.length === 0) {
-      requestLog.delete(ip);
-    } else {
-      requestLog.set(ip, recent);
-    }
-  }
-}, CLEANUP_INTERVAL_MS);
 
 function getIp(request: NextRequest): string {
   const forwarded = request.headers.get("x-forwarded-for");
