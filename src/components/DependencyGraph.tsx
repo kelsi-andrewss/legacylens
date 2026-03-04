@@ -31,6 +31,7 @@ interface DependencyGraphProps {
   routineName: string;
   dependencies: string;
   dataTypePrefix: string;
+  onRoutineClick?: (name: string) => void;
 }
 
 interface GraphNode {
@@ -49,9 +50,14 @@ export default function DependencyGraph({
   routineName,
   dependencies,
   dataTypePrefix,
+  onRoutineClick,
 }: DependencyGraphProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(400);
+  const onRoutineClickRef = useRef(onRoutineClick);
+  useEffect(() => {
+    onRoutineClickRef.current = onRoutineClick;
+  }, [onRoutineClick]);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -148,6 +154,10 @@ export default function DependencyGraph({
 
   const nodeLabel = useCallback((node: GraphNode) => node.label, []);
 
+  const handleNodeClick = useCallback((node: GraphNode) => {
+    onRoutineClickRef.current?.(node.label);
+  }, []);
+
   return (
     <div
       ref={containerRef}
@@ -160,6 +170,7 @@ export default function DependencyGraph({
         nodeCanvasObject={nodeCanvasObject}
         nodePointerAreaPaint={nodePointerAreaPaint}
         nodeLabel={nodeLabel}
+        onNodeClick={handleNodeClick}
         linkColor={() => "#4b5563"}
         linkWidth={1}
         d3AlphaDecay={0.05}
