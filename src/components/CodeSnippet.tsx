@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useCallback } from "react";
 import { Light as SyntaxHighlighter } from "react-syntax-highlighter";
 import fortran from "react-syntax-highlighter/dist/esm/languages/hljs/fortran";
 import { atomOneDark } from "react-syntax-highlighter/dist/esm/styles/hljs";
@@ -7,7 +8,7 @@ import DependencyGraph from "./DependencyGraph";
 
 SyntaxHighlighter.registerLanguage("fortran", fortran);
 
-interface ChunkData {
+export interface ChunkData {
   id: string;
   score: number;
   metadata: {
@@ -26,10 +27,21 @@ interface ChunkData {
 
 interface CodeSnippetProps {
   chunk: ChunkData;
+  onPin?: (chunk: ChunkData) => void;
+  isPinned?: boolean;
 }
 
-export default function CodeSnippet({ chunk }: CodeSnippetProps) {
+export default function CodeSnippet({ chunk, onPin, isPinned }: CodeSnippetProps) {
   const { metadata: m, score } = chunk;
+  const [showPinConfirm, setShowPinConfirm] = useState(false);
+
+  const handlePin = useCallback(() => {
+    if (isPinned || !onPin) return;
+    onPin(chunk);
+    setShowPinConfirm(true);
+    const timer = setTimeout(() => setShowPinConfirm(false), 1500);
+    return () => clearTimeout(timer);
+  }, [chunk, onPin, isPinned]);
   const relevance = (score * 100).toFixed(1);
   const githubUrl = `https://github.com/Reference-LAPACK/lapack/blob/master/${m.file_path}#L${m.line_start}`;
 
@@ -54,6 +66,22 @@ export default function CodeSnippet({ chunk }: CodeSnippetProps) {
           )}
         </div>
         <div className="flex items-center gap-3">
+          {onPin && (
+            <button
+              onClick={handlePin}
+              disabled={isPinned}
+              className={`text-xs transition-colors ${
+                showPinConfirm
+                  ? "text-green-600 dark:text-green-400"
+                  : isPinned
+                    ? "text-ll-on-surface-muted/50 cursor-default"
+                    : "text-ll-on-surface-muted hover:text-ll-on-surface"
+              }`}
+              title={isPinned ? "Already pinned" : "Pin to scratchpad"}
+            >
+              {showPinConfirm ? "Pinned!" : isPinned ? "Pinned" : "Pin"}
+            </button>
+          )}
           <a
             href={githubUrl}
             target="_blank"
