@@ -86,6 +86,22 @@ export async function fetchRoutines(ids: string[]) {
   return index.fetch({ ids });
 }
 
+/**
+ * Fetch chunks for a list of routine names using a metadata filter.
+ * Uses a zero vector since Pinecone requires a vector even for metadata-only queries.
+ */
+export async function fetchRoutinesByNames(names: string[]) {
+  if (names.length === 0) return [];
+  const index = getIndex();
+  const results = await index.query({
+    vector: new Array(1536).fill(0),
+    topK: Math.min(names.length * 3, 50),
+    includeMetadata: true,
+    filter: { subroutine_name: { $in: names } },
+  });
+  return results.matches || [];
+}
+
 /** Pure cosine similarity between two vectors. */
 export function cosineSimilarity(vecA: number[], vecB: number[]): number {
   let dot = 0, magA = 0, magB = 0;
