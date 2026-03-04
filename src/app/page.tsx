@@ -7,8 +7,10 @@ import AnswerStream from "@/components/AnswerStream";
 import CodeSnippet, { type ChunkData } from "@/components/CodeSnippet";
 import { useTheme } from "@/components/ThemeProvider";
 import Pokedex, { saveRoutineMeta } from "@/components/Pokedex";
-import { markDiscovered, isDiscovered, addXP } from "@/lib/pokedex";
+import { markDiscovered, isDiscovered, addXP, getStats } from "@/lib/pokedex";
 import Scratchpad, { type PinnedItem } from "@/components/Scratchpad";
+import ChallengeToast from "@/components/ChallengeToast";
+import { shouldTriggerChallenge, generateChallenge, type Challenge } from "@/lib/challenges";
 
 const SCRATCHPAD_KEY = "ll-scratchpad";
 
@@ -35,6 +37,7 @@ export default function Home() {
   resolvedThemeRef.current = resolvedTheme;
   const [showPokedex, setShowPokedex] = useState(false);
   const [pinnedItems, setPinnedItems] = useState<PinnedItem[]>(loadPinnedItems);
+  const [activeChallenge, setActiveChallenge] = useState<Challenge | null>(null);
 
   useEffect(() => {
     localStorage.setItem(SCRATCHPAD_KEY, JSON.stringify(pinnedItems));
@@ -82,6 +85,11 @@ export default function Home() {
     );
   }, []);
 
+  const handleChallengeComplete = useCallback((xpReward: number) => {
+    addXP(xpReward);
+    setActiveChallenge(null);
+  }, []);
+
   const handleSearch = useCallback(
     async (query: string, modeOverride?: string) => {
       const activeMode = modeOverride || mode;
@@ -124,8 +132,9 @@ export default function Home() {
             try {
               const event = JSON.parse(json);
               if (event.type === "chunks") {
-                setChunks(event.data);
-                for (const chunk of event.data as ChunkData[]) {
+                const receivedChunks = event.data as ChunkData[];
+                setChunks(receivedChunks);
+                for (const chunk of receivedChunks) {
                   const name = chunk.metadata.subroutine_name;
                   if (name) {
                     const alreadyKnown = isDiscovered(name);
@@ -134,6 +143,15 @@ export default function Home() {
                     if (!alreadyKnown) {
                       addXP(10);
                     }
+                  }
+                }
+                // Check for challenge trigger after discoveries
+                const stats = getStats();
+                if (shouldTriggerChallenge(stats)) {
+                  const randomChunk = receivedChunks[Math.floor(Math.random() * receivedChunks.length)];
+                  if (randomChunk) {
+                    const challenge = generateChallenge(randomChunk.metadata);
+                    setActiveChallenge(challenge);
                   }
                 }
               } else if (event.type === "text") {
@@ -304,6 +322,13 @@ export default function Home() {
           />
         </div>
       </main>
+
+      {activeChallenge && (
+        <ChallengeToast
+          challenge={activeChallenge}
+          onComplete={handleChallengeComplete}
+        />
+      )}
     </div>
   );
 }
