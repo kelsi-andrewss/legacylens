@@ -47,7 +47,7 @@ export default function CodeSnippet({ chunk, onPin, isPinned }: CodeSnippetProps
   const githubUrl = `https://github.com/Reference-LAPACK/lapack/blob/master/${m.file_path}#L${m.line_start}`;
 
   return (
-    <div className="rounded-lg border border-ll-outline bg-ll-surface-variant shadow-sm overflow-hidden">
+    <div className="snap-focus rounded-lg border border-ll-outline bg-ll-surface-variant shadow-sm overflow-hidden">
       <div className="flex items-center justify-between border-b border-ll-outline bg-ll-surface-tonal px-4 py-2">
         <div className="flex items-center gap-2">
           <span className="font-mono text-sm font-semibold text-ll-on-surface">
