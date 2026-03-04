@@ -16,6 +16,11 @@ const categoryColors: Record<string, string> = {
   BLAS: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
 };
 
+const categoryBorderColors: Record<string, string> = {
+  LAPACK: "border-l-blue-500",
+  BLAS: "border-l-emerald-500",
+};
+
 const typeLabels: Record<string, string> = {
   S: "Single",
   D: "Double",
@@ -100,49 +105,82 @@ export default function Pokedex() {
 
   return (
     <div className="rounded-lg border border-ll-outline bg-ll-surface-variant p-6">
-      {/* Stats header */}
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-lg font-bold text-ll-on-surface">
-          Subroutine Collection
-        </h2>
-        <div className="flex items-center gap-4 text-sm text-ll-on-surface-muted">
-          <span>
-            <span className="font-semibold text-ll-primary">
-              {stats.discovered}
-            </span>{" "}
-            routines discovered
+      {/* Header */}
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-bold text-ll-on-surface">
+            Discovery Archive
+          </h2>
+          <p className="mt-0.5 text-xs text-ll-on-surface-muted">
+            Every LAPACK &amp; BLAS routine you search is automatically collected here. Search to start exploring.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="inline-flex items-center rounded-full border border-ll-outline bg-ll-surface px-2.5 py-1 text-xs font-semibold text-ll-primary">
+            {stats.discovered} discovered
           </span>
-          <span className="text-ll-outline">|</span>
-          <span>
-            <span className="font-semibold text-ll-primary">{stats.xp}</span>{" "}
-            XP
+          <span className="inline-flex items-center rounded-full border border-ll-outline bg-ll-surface px-2.5 py-1 text-xs font-semibold text-ll-primary">
+            {stats.xp} XP
           </span>
         </div>
       </div>
 
-      {/* Search */}
-      <input
-        type="text"
-        placeholder="Filter routines..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="mb-4 w-full rounded-md border border-ll-outline bg-ll-surface px-3 py-2 text-sm text-ll-on-surface placeholder:text-ll-on-surface-muted focus:border-ll-primary focus:outline-none focus:ring-1 focus:ring-ll-primary"
-      />
+      {/* Filter — only when there are entries */}
+      {entries.length > 0 && (
+        <input
+          type="text"
+          placeholder="Filter routines..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="mb-4 w-full rounded-md border border-ll-outline bg-ll-surface px-3 py-2 text-sm text-ll-on-surface placeholder:text-ll-on-surface-muted focus:border-ll-primary focus:outline-none focus:ring-1 focus:ring-ll-primary"
+        />
+      )}
 
-      {/* Grid */}
-      {filtered.length === 0 ? (
+      {/* Empty state */}
+      {entries.length === 0 ? (
+        <div>
+          <p className="mb-2 text-center text-sm font-semibold text-ll-on-surface">
+            Your archive is empty
+          </p>
+          <p className="mb-4 text-center text-xs text-ll-on-surface-muted">
+            Search any routine to make your first discovery
+          </p>
+          <div className="grid grid-cols-3 gap-2">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="animate-pulse rounded-md border border-ll-outline bg-ll-surface p-3"
+              >
+                <div className="mb-2 h-3 w-3/4 rounded bg-ll-surface-tonal" />
+                <div className="flex gap-1">
+                  <div className="h-4 w-10 rounded-full bg-ll-surface-tonal" />
+                  <div className="h-4 w-8 rounded-full bg-ll-surface-tonal" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : filtered.length === 0 ? (
         <p className="py-8 text-center text-sm text-ll-on-surface-muted">
-          {entries.length === 0
-            ? "No routines discovered yet. Search for LAPACK/BLAS routines to start your collection!"
-            : "No routines match your filter."}
+          No routines match your filter.
         </p>
       ) : (
+        /* Populated grid */
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-          {filtered.map((entry) => (
+          {filtered.map((entry, idx) => (
             <div
               key={entry.name}
-              className="rounded-md border border-ll-outline bg-ll-surface p-3 transition-colors hover:border-ll-primary"
+              className={`relative rounded-md border border-ll-outline border-l-2 bg-ll-surface p-3 transition-colors hover:border-ll-primary ${
+                categoryBorderColors[entry.category] || "border-l-ll-outline"
+              }`}
             >
+              {/* Discovery order */}
+              <span
+                className="absolute right-2 top-1.5 text-ll-on-surface-muted"
+                style={{ fontSize: "9px" }}
+              >
+                #{idx + 1}
+              </span>
               <p className="truncate text-sm font-semibold text-ll-on-surface">
                 {entry.name}
               </p>
