@@ -278,12 +278,12 @@ export default function Home() {
             )}
 
             {chunks.length > 0 && (
-              <div className="space-y-4 reveal-enter">
+              <div className="ghost-map-container space-y-4 reveal-enter">
                 <h2 className="text-lg font-semibold text-ll-on-surface">
                   Retrieved Code ({chunks.length} chunks)
                 </h2>
                 {chunks.map((chunk, index) => (
-                  <div key={chunk.id} className="reveal-enter" style={{ animationDelay: `${index * 80}ms` }}>
+                  <div key={chunk.id} className="ghost-map-item reveal-enter" style={{ animationDelay: `${index * 80}ms` }}>
                     <CodeSnippet
                       chunk={chunk}
                       onPin={handlePin}
