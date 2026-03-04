@@ -195,8 +195,8 @@ const AnswerStream = React.memo(function AnswerStream({
   if (!rendered && !isStreaming) return null;
 
   return (
-    <div className="rounded-lg border border-ll-outline bg-ll-surface-variant p-6 shadow-sm reveal-enter max-h-[32rem] overflow-y-auto">
-      <div className={`prose prose-neutral dark:prose-invert max-w-none prose-pre:bg-ll-surface-tonal [&_code]:text-ll-primary${isStreaming ? " warm-streaming-glow" : ""}`}>
+    <div className="rounded-lg border border-ll-outline bg-ll-surface-variant p-6 shadow-sm reveal-enter max-h-[32rem] overflow-y-auto overflow-x-hidden">
+      <div className={`prose prose-neutral dark:prose-invert max-w-none prose-pre:bg-ll-surface-tonal prose-pre:overflow-x-auto [&_code]:text-ll-primary${isStreaming ? " warm-streaming-glow" : ""}`}>
         <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>{rendered}</ReactMarkdown>
         {isStreaming && (
           <Loader2 className="inline h-4 w-4 animate-spin text-ll-primary" />
