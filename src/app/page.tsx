@@ -33,7 +33,8 @@ export default function Home() {
   const [exampleQuery, setExampleQuery] = useState<string | undefined>();
 
   const handleSearch = useCallback(
-    async (query: string) => {
+    async (query: string, modeOverride?: string) => {
+      const activeMode = modeOverride || mode;
       setIsLoading(true);
       setAnswer("");
       setChunks([]);
@@ -46,7 +47,7 @@ export default function Home() {
         const response = await fetch("/api/query", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query, mode, filters: Object.keys(filters).length > 0 ? filters : undefined }),
+          body: JSON.stringify({ query, mode: activeMode, filters: Object.keys(filters).length > 0 ? filters : undefined }),
         });
 
         if (!response.ok) {
@@ -92,9 +93,10 @@ export default function Home() {
     [mode, categoryFilter, typeFilter]
   );
 
-  const runExample = (query: string) => {
+  const runExample = (query: string, exampleMode: string) => {
+    setMode(exampleMode);
     setExampleQuery(query);
-    handleSearch(query);
+    handleSearch(query, exampleMode);
   };
 
   return (
@@ -191,17 +193,21 @@ export default function Home() {
                 <p className="text-sm text-zinc-500 dark:text-zinc-400">
                   Try an example:
                 </p>
-                <div className="grid gap-3 sm:grid-cols-3">
+                <div className="grid gap-3 sm:grid-cols-2">
                   {[
-                    { query: "What does DGESV do?", desc: "Explain a routine" },
-                    { query: "How does LU factorization work in LAPACK?", desc: "Explore a concept" },
-                    { query: "What are the BLAS level-2 operations?", desc: "Survey a category" },
-                  ].map(({ query, desc }) => (
+                    { query: "What does DGESV do?", mode: "explain", desc: "Explain a routine" },
+                    { query: "What routines does DGESV call?", mode: "dependencies", desc: "Map dependencies" },
+                    { query: "Document the DGETRF subroutine", mode: "docs", desc: "Generate docs" },
+                    { query: "Translate DGEMM to Python", mode: "translate", desc: "Translate to modern code" },
+                  ].map(({ query, mode: exampleMode, desc }) => (
                     <button
                       key={query}
-                      onClick={() => runExample(query)}
+                      onClick={() => runExample(query, exampleMode)}
                       className="rounded-lg border border-zinc-200 bg-white px-4 py-3 text-left transition-colors hover:border-blue-300 hover:bg-blue-50 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:border-blue-600 dark:hover:bg-blue-900/30"
                     >
+                      <span className="mb-1.5 inline-block rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
+                        {exampleMode}
+                      </span>
                       <span className="block text-sm font-medium text-zinc-900 dark:text-zinc-100">
                         &quot;{query}&quot;
                       </span>
