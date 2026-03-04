@@ -3,6 +3,7 @@ import { embedQuery, getOpenAI } from "@/lib/openai";
 import { queryPinecone } from "@/lib/pinecone";
 import { QueryMode, getSystemPrompt, buildUserMessage } from "@/lib/prompts";
 import { CHAT_MODEL, TEMPERATURE, MAX_TOKENS, DEFAULT_TOP_K } from "@/lib/config";
+import { validateQuery, validateMode, sanitizeString } from "@/lib/validation";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -16,21 +17,29 @@ export async function POST(req: NextRequest) {
       filters?: { category?: string; data_type_prefix?: string };
     };
 
-    if (!query || typeof query !== "string") {
-      return Response.json({ error: "query is required" }, { status: 400 });
+    const queryResult = validateQuery(query);
+    if (!queryResult.valid) {
+      return Response.json({ error: queryResult.error }, { status: 400 });
     }
+
+    const modeResult = validateMode(mode);
+    if (!modeResult.valid) {
+      return Response.json({ error: modeResult.error }, { status: 400 });
+    }
+
+    const sanitizedQuery = sanitizeString(query);
 
     // Build Pinecone filter
     const pineconeFilter: Record<string, unknown> = {};
     if (filters?.category) {
-      pineconeFilter.category = { $eq: filters.category };
+      pineconeFilter.category = { $eq: sanitizeString(filters.category) };
     }
     if (filters?.data_type_prefix) {
-      pineconeFilter.data_type_prefix = { $eq: filters.data_type_prefix };
+      pineconeFilter.data_type_prefix = { $eq: sanitizeString(filters.data_type_prefix) };
     }
 
     // Embed query
-    const embedding = await embedQuery(query);
+    const embedding = await embedQuery(sanitizedQuery);
 
     // Search Pinecone
     const matches = await queryPinecone(
@@ -41,7 +50,7 @@ export async function POST(req: NextRequest) {
 
     // Build context
     const systemPrompt = getSystemPrompt(mode as QueryMode);
-    const userMessage = buildUserMessage(query, matches as { metadata: Record<string, unknown>; score?: number }[]);
+    const userMessage = buildUserMessage(sanitizedQuery, matches as { metadata: Record<string, unknown>; score?: number }[]);
 
     // Stream response from GPT-4o-mini
     const stream = await getOpenAI().chat.completions.create({

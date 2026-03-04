@@ -4,6 +4,7 @@ import {
   fetchRoutines,
   ChunkMetadata,
 } from "@/lib/pinecone";
+import { validateRoutineId } from "@/lib/validation";
 
 export const runtime = "nodejs";
 
@@ -11,9 +12,18 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
   const { idA, idB } = body;
 
-  if (!idA || !idB) {
+  const idAResult = validateRoutineId(idA);
+  if (!idAResult.valid) {
     return Response.json(
-      { error: "Both idA and idB are required" },
+      { error: `idA: ${idAResult.error}` },
+      { status: 400 }
+    );
+  }
+
+  const idBResult = validateRoutineId(idB);
+  if (!idBResult.valid) {
+    return Response.json(
+      { error: `idB: ${idBResult.error}` },
       { status: 400 }
     );
   }
