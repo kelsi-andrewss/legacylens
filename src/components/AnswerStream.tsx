@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState, useMemo, useCallback } from "react"
 import ReactMarkdown, { type Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Loader2 } from "lucide-react";
+import { detectRoutineSpans } from "@/lib/routineParser";
 
 interface AnswerStreamProps {
   content: string;
@@ -11,9 +12,62 @@ interface AnswerStreamProps {
   routineNames?: string[];
   activeRoutine?: string | null;
   onRoutineHover?: (name: string | null) => void;
+  onRoutineClick?: (name: string) => void;
 }
 
 const THROTTLE_MS = 50;
+
+/**
+ * Renders a plain text node with detected Fortran routine names wrapped in
+ * clickable/hoverable <span> elements. Only annotates when onRoutineClick is provided.
+ */
+function AnnotatedText({
+  text,
+  activeRoutine,
+  onRoutineHover,
+  onRoutineClick,
+}: {
+  text: string;
+  activeRoutine: string | null;
+  onRoutineHover?: (name: string | null) => void;
+  onRoutineClick?: (name: string) => void;
+}) {
+  const spans = useMemo(() => detectRoutineSpans(text), [text]);
+
+  if (spans.length === 0 || !onRoutineClick) {
+    return <>{text}</>;
+  }
+
+  const parts: React.ReactNode[] = [];
+  let cursor = 0;
+
+  for (const span of spans) {
+    if (span.start > cursor) {
+      parts.push(text.slice(cursor, span.start));
+    }
+    const name = span.name;
+    const isActive = activeRoutine === name;
+    parts.push(
+      <span
+        key={`${name}-${span.start}`}
+        onClick={() => onRoutineClick(name)}
+        onMouseEnter={() => onRoutineHover?.(name)}
+        onMouseLeave={() => onRoutineHover?.(null)}
+        className={`routine-link cursor-pointer underline decoration-dotted transition-colors hover:text-ll-primary${isActive ? " text-ll-primary" : ""}`}
+        title={`Navigate to ${name}`}
+      >
+        {name}
+      </span>
+    );
+    cursor = span.end;
+  }
+
+  if (cursor < text.length) {
+    parts.push(text.slice(cursor));
+  }
+
+  return <>{parts}</>;
+}
 
 const AnswerStream = React.memo(function AnswerStream({
   content,
@@ -21,6 +75,7 @@ const AnswerStream = React.memo(function AnswerStream({
   routineNames = [],
   activeRoutine = null,
   onRoutineHover,
+  onRoutineClick,
 }: AnswerStreamProps) {
   const latestContent = useRef(content);
   const [rendered, setRendered] = useState(content);
@@ -55,12 +110,21 @@ const AnswerStream = React.memo(function AnswerStream({
     onRoutineHoverRef.current = onRoutineHover;
   }, [onRoutineHover]);
 
+  const onRoutineClickRef = useRef(onRoutineClick);
+  useEffect(() => {
+    onRoutineClickRef.current = onRoutineClick;
+  }, [onRoutineClick]);
+
   const handleMouseEnter = useCallback((name: string) => {
     onRoutineHoverRef.current?.(name);
   }, []);
 
   const handleMouseLeave = useCallback(() => {
     onRoutineHoverRef.current?.(null);
+  }, []);
+
+  const handleClick = useCallback((name: string) => {
+    onRoutineClickRef.current?.(name);
   }, []);
 
   const markdownComponents = useMemo<Components>(() => ({
@@ -76,10 +140,11 @@ const AnswerStream = React.memo(function AnswerStream({
         const isActive = activeRoutine === text;
         return (
           <code
-            className="semantic-tracer-inline"
+            className={`semantic-tracer-inline${onRoutineClickRef.current ? " cursor-pointer underline decoration-dotted hover:text-ll-primary" : ""}`}
             data-tracer-active={isActive || undefined}
             onMouseEnter={() => handleMouseEnter(text)}
             onMouseLeave={handleMouseLeave}
+            onClick={() => handleClick(text)}
             {...rest}
           >
             {children}
@@ -89,7 +154,43 @@ const AnswerStream = React.memo(function AnswerStream({
 
       return <code {...rest}>{children}</code>;
     },
-  }), [routineNameSet, activeRoutine, handleMouseEnter, handleMouseLeave]);
+    // Override paragraph nodes to inject routine-name spans into plain text children
+    p: ({ children }) => (
+      <p>
+        {React.Children.map(children, (child) => {
+          if (typeof child === "string") {
+            return (
+              <AnnotatedText
+                text={child}
+                activeRoutine={activeRoutine}
+                onRoutineHover={onRoutineHoverRef.current}
+                onRoutineClick={onRoutineClickRef.current}
+              />
+            );
+          }
+          return child;
+        })}
+      </p>
+    ),
+    // Override list-item nodes to inject routine-name spans into plain text children
+    li: ({ children }) => (
+      <li>
+        {React.Children.map(children, (child) => {
+          if (typeof child === "string") {
+            return (
+              <AnnotatedText
+                text={child}
+                activeRoutine={activeRoutine}
+                onRoutineHover={onRoutineHoverRef.current}
+                onRoutineClick={onRoutineClickRef.current}
+              />
+            );
+          }
+          return child;
+        })}
+      </li>
+    ),
+  }), [routineNameSet, activeRoutine, handleMouseEnter, handleMouseLeave, handleClick]);
 
   if (!rendered && !isStreaming) return null;
 
