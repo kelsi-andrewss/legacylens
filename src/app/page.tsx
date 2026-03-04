@@ -30,6 +30,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
+  const [exampleQuery, setExampleQuery] = useState<string | undefined>();
 
   const handleSearch = useCallback(
     async (query: string) => {
@@ -90,6 +91,11 @@ export default function Home() {
     },
     [mode, categoryFilter, typeFilter]
   );
+
+  const runExample = (query: string) => {
+    setExampleQuery(query);
+    handleSearch(query);
+  };
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
@@ -158,7 +164,11 @@ export default function Home() {
 
           {/* Main content */}
           <div className="min-w-0 flex-1 space-y-6">
-            <SearchBar onSearch={handleSearch} isLoading={isLoading} />
+            <SearchBar
+              onSearch={handleSearch}
+              isLoading={isLoading}
+              externalQuery={exampleQuery}
+            />
             <ModeSelector mode={mode} onModeChange={setMode} />
 
             {(answer || isLoading) && (
@@ -177,10 +187,30 @@ export default function Home() {
             )}
 
             {!answer && !isLoading && chunks.length === 0 && (
-              <div className="rounded-lg border border-dashed border-zinc-300 bg-white p-12 text-center dark:border-zinc-700 dark:bg-zinc-900">
-                <p className="text-zinc-500 dark:text-zinc-400">
-                  Try asking about a LAPACK routine, like &quot;What does DGESV do?&quot; or &quot;How does LU factorization work in LAPACK?&quot;
+              <div className="space-y-3">
+                <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                  Try an example:
                 </p>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {[
+                    { query: "What does DGESV do?", desc: "Explain a routine" },
+                    { query: "How does LU factorization work in LAPACK?", desc: "Explore a concept" },
+                    { query: "What are the BLAS level-2 operations?", desc: "Survey a category" },
+                  ].map(({ query, desc }) => (
+                    <button
+                      key={query}
+                      onClick={() => runExample(query)}
+                      className="rounded-lg border border-zinc-200 bg-white px-4 py-3 text-left transition-colors hover:border-blue-300 hover:bg-blue-50 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:border-blue-600 dark:hover:bg-blue-900/30"
+                    >
+                      <span className="block text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                        &quot;{query}&quot;
+                      </span>
+                      <span className="mt-1 block text-xs text-zinc-500 dark:text-zinc-400">
+                        {desc}
+                      </span>
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
           </div>
