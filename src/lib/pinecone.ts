@@ -1,6 +1,5 @@
 import { Pinecone } from "@pinecone-database/pinecone";
 import { DEFAULT_TOP_K, PINECONE_INDEX_NAME } from "@/lib/config";
-import { embedQuery } from "@/lib/openai";
 
 let client: Pinecone | null = null;
 let _index: ReturnType<Pinecone["index"]> | null = null;
@@ -32,20 +31,13 @@ export interface ChunkMetadata {
 export async function queryPinecone(
   embedding: number[],
   topK: number = DEFAULT_TOP_K,
-  filter?: Record<string, unknown>,
-  options?: { includeSynthetic?: boolean }
+  filter?: Record<string, unknown>
 ) {
-  // Exclude synthetic chunks by default to prevent hallucination pollution of ground-truth code results.
-  const excludeSynthetic = !(options?.includeSynthetic ?? false);
-  const syntheticFilter: Record<string, unknown> = excludeSynthetic
-    ? { is_synthetic: { $ne: true } }
-    : {};
+  const syntheticGuard = { is_synthetic: { $ne: true } };
   const mergedFilter =
     filter && Object.keys(filter).length > 0
-      ? { ...filter, ...syntheticFilter }
-      : Object.keys(syntheticFilter).length > 0
-      ? syntheticFilter
-      : undefined;
+      ? { ...syntheticGuard, ...filter }
+      : syntheticGuard;
 
   const results = await getIndex().query({
     vector: embedding,
@@ -54,44 +46,6 @@ export async function queryPinecone(
     filter: mergedFilter,
   });
   return results.matches || [];
-}
-
-/** djb2 hash — returns a stable hex string for a given input string. */
-function djb2Hash(str: string): string {
-  let hash = 5381;
-  for (let i = 0; i < str.length; i++) {
-    hash = ((hash << 5) + hash) ^ str.charCodeAt(i);
-    hash = hash >>> 0; // keep unsigned 32-bit
-  }
-  return hash.toString(16);
-}
-
-/**
- * Embed an LLM answer and upsert it to Pinecone as a synthetic chunk.
- * Synthetic chunks are tagged `is_synthetic: true` so they can be
- * filtered in or out independently of ground-truth code vectors.
- */
-export async function upsertSyntheticChunk(
-  query: string,
-  answer: string,
-  routineNames: string[]
-): Promise<void> {
-  const truncatedAnswer = answer.slice(0, 2000);
-  const embedding = await embedQuery(truncatedAnswer);
-  const id = `synthetic_${djb2Hash(query)}`;
-  await getIndex().upsert({ records: [
-    {
-      id,
-      values: embedding,
-      metadata: {
-        is_synthetic: true,
-        text: truncatedAnswer,
-        query,
-        linked_routines: routineNames.slice(0, 10).join(", "),
-        created_at: Date.now(),
-      },
-    },
-  ] });
 }
 
 const EMBEDDING_DIM = 1536;

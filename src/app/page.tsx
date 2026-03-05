@@ -256,6 +256,12 @@ export default function Home() {
     return true;
   });
 
+  const sortedChunks = useMemo(() => {
+    const direct = filteredChunks.filter((c) => nameTokens.has(c.metadata.subroutine_name?.toUpperCase() ?? ""));
+    const rest = filteredChunks.filter((c) => !nameTokens.has(c.metadata.subroutine_name?.toUpperCase() ?? ""));
+    return [...direct, ...rest];
+  }, [filteredChunks, nameTokens]);
+
   const filtersActive = categoryFilter !== "" || typeFilter !== "";
 
   const handleSuggestedSelect = useCallback((query: string, suggestedMode?: string) => {
@@ -402,7 +408,7 @@ export default function Home() {
                 <h2 className="text-lg font-semibold text-ll-on-surface">
                   Retrieved Code ({filtersActive ? `${filteredChunks.length} of ${chunks.length} chunks` : `${chunks.length} chunks`})
                 </h2>
-                {filteredChunks.map((chunk, index) => (
+                {sortedChunks.map((chunk, index) => (
                   <div key={chunk.id} className="ghost-map-item reveal-enter" style={{ animationDelay: `${index * 80}ms` }}>
                     <CodeSnippet
                       chunk={chunk}
