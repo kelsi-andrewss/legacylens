@@ -83,7 +83,7 @@ export default function CodeSnippet({ chunk, onPin, isPinned, isDirectMatch, act
       });
   }, [m.file_path, fullSource]);
 
-  const relevance = (score * 100).toFixed(1);
+  const relevance = Math.max(0, Math.min(100, ((score - 0.4) / 0.45) * 100)).toFixed(1);
   const githubUrl = `https://github.com/Reference-LAPACK/lapack/blob/master/${m.file_path}#L${m.line_start}`;
   const isTracerActive = activeRoutine === m.subroutine_name;
 
@@ -168,9 +168,9 @@ export default function CodeSnippet({ chunk, onPin, isPinned, isDirectMatch, act
             <span className="rounded-full px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300">Direct match</span>
           ) : (
             <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-              score > 0.8
+              score > 0.7
                 ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
-                : score > 0.6
+                : score > 0.55
                   ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300"
                   : "bg-zinc-100 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-400"
             }`}>
