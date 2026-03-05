@@ -156,10 +156,6 @@ export default function Home() {
           signal: controller.signal,
         });
 
-        if (!response.ok) {
-          throw new Error("Query failed");
-        }
-
         const reader = response.body?.getReader();
         if (!reader) throw new Error("No reader");
 
