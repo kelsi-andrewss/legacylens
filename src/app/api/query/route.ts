@@ -44,12 +44,6 @@ export async function POST(req: NextRequest) {
       pineconeFilter.data_type_prefix = { $eq: sanitizeString(filters.data_type_prefix) };
     }
 
-    // Detect LAPACK-style routine name tokens in the query (e.g. DGESVDX, DPOTRF)
-    const nameTokens = [...new Set((sanitizedQuery.match(/\b[A-Z][A-Z0-9]{3,7}\b/g) ?? []))];
-    if (nameTokens.length > 0) {
-      pineconeFilter.subroutine_name = { $in: nameTokens };
-    }
-
     // Embed query — use HyDE to improve semantic similarity for all queries
     let textToEmbed = sanitizedQuery;
     try {
@@ -70,21 +64,7 @@ export async function POST(req: NextRequest) {
     );
 
     const pineconeMs = Date.now() - t0 - embedMs;
-    // Relax threshold when name filter is active — metadata filter already guarantees relevance
-    const threshold = nameTokens.length > 0 ? 0.3 : MIN_SCORE_THRESHOLD;
-    let filteredMatches = matches.filter(m => (m.score ?? 0) >= threshold);
-
-    // Fallback: name filter returned nothing — retry without subroutine_name filter
-    if (filteredMatches.length === 0 && nameTokens.length > 0 && pineconeFilter.subroutine_name) {
-      delete pineconeFilter.subroutine_name;
-      const fallbackMatches = await queryPinecone(
-        embedding,
-        DEFAULT_TOP_K,
-        Object.keys(pineconeFilter).length > 0 ? pineconeFilter : undefined,
-        { includeSynthetic: mode === "explain" }
-      );
-      filteredMatches = fallbackMatches.filter(m => (m.score ?? 0) >= MIN_SCORE_THRESHOLD);
-    }
+    let filteredMatches = matches.filter(m => (m.score ?? 0) >= MIN_SCORE_THRESHOLD);
 
     const filtersApplied = Object.keys(pineconeFilter).length > 0;
 
