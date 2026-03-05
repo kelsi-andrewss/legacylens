@@ -79,7 +79,7 @@ export async function upsertSyntheticChunk(
   const truncatedAnswer = answer.slice(0, 2000);
   const embedding = await embedQuery(truncatedAnswer);
   const id = `synthetic_${djb2Hash(query)}`;
-  await getIndex().upsert([
+  await getIndex().upsert({ records: [
     {
       id,
       values: embedding,
@@ -91,7 +91,7 @@ export async function upsertSyntheticChunk(
         created_at: Date.now(),
       },
     },
-  ]);
+  ] });
 }
 
 const EMBEDDING_DIM = 1536;
