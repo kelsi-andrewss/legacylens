@@ -144,12 +144,15 @@ export async function POST(req: NextRequest) {
             max_tokens: MODE_MAX_TOKENS[mode as QueryMode],
           });
 
-          // Send chunks metadata first
-          const chunksData = allMatches.map((m) => ({
-            id: m.id,
-            score: m.score,
-            metadata: m.metadata,
-          }));
+          // Send chunks metadata first — exclude synthetic cached-answer chunks,
+          // which lack subroutine_name/kind/category and can't be rendered by CodeSnippet.
+          const chunksData = allMatches
+            .filter((m) => !m.metadata?.is_synthetic)
+            .map((m) => ({
+              id: m.id,
+              score: m.score,
+              metadata: m.metadata,
+            }));
           controller.enqueue(
             encoder.encode(`data: ${JSON.stringify({ type: "chunks", data: chunksData })}\n\n`)
           );
