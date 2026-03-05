@@ -44,13 +44,16 @@ export async function POST(req: NextRequest) {
       pineconeFilter.data_type_prefix = { $eq: sanitizeString(filters.data_type_prefix) };
     }
 
-    // Embed query — use HyDE to improve semantic similarity for all queries
+    // Embed query — use HyDE for longer queries (>5 words) where semantic expansion helps.
+    // Short queries have precise embeddings without expansion, saving ~400-700ms latency.
     let textToEmbed = sanitizedQuery;
-    try {
-      const hydeDoc = await generateHypotheticalDocument(sanitizedQuery);
-      if (hydeDoc) textToEmbed = hydeDoc;
-    } catch {
-      // fallback: textToEmbed stays as sanitizedQuery
+    if (sanitizedQuery.trim().split(/\s+/).length > 5) {
+      try {
+        const hydeDoc = await generateHypotheticalDocument(sanitizedQuery);
+        if (hydeDoc) textToEmbed = hydeDoc;
+      } catch {
+        // fallback: textToEmbed stays as sanitizedQuery
+      }
     }
     const embedding = await embedQuery(textToEmbed);
     const embedMs = Date.now() - t0;
