@@ -33,11 +33,17 @@ export async function queryPinecone(
   topK: number = DEFAULT_TOP_K,
   filter?: Record<string, unknown>
 ) {
+  const syntheticGuard = { is_synthetic: { $ne: true } };
+  const mergedFilter =
+    filter && Object.keys(filter).length > 0
+      ? { ...syntheticGuard, ...filter }
+      : syntheticGuard;
+
   const results = await getIndex().query({
     vector: embedding,
     topK,
     includeMetadata: true,
-    filter: filter && Object.keys(filter).length > 0 ? filter : undefined,
+    filter: mergedFilter,
   });
   return results.matches || [];
 }
