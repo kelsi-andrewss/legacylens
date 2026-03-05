@@ -73,6 +73,22 @@ export async function POST(req: NextRequest) {
           );
 
           const pineconeMs = Date.now() - t0 - embedMs;
+
+          // Boost scores for chunks whose subroutine_name partially matches query tokens.
+          // This rescues relevant chunks (e.g. DGESVDX when querying "DGESV") that score
+          // low because their embedded text lacks the routine name.
+          const nameTokens = (sanitizedQuery.match(/\b[A-Z][A-Z0-9]{2,7}\b/gi) ?? []).map(t => t.toUpperCase());
+          if (nameTokens.length > 0) {
+            for (const m of matches) {
+              const subName = ((m.metadata?.subroutine_name as string) ?? '').toUpperCase();
+              if (!subName) continue;
+              const hasPartialMatch = nameTokens.some(token => subName.includes(token) || token.includes(subName));
+              if (hasPartialMatch) {
+                m.score = Math.min((m.score ?? 0) + 0.15, 1.0);
+              }
+            }
+          }
+
           let filteredMatches = matches.filter(m => (m.score ?? 0) >= MIN_SCORE_THRESHOLD);
 
           const filtersApplied = Object.keys(pineconeFilter).length > 0;
