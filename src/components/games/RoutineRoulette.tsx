@@ -44,10 +44,11 @@ function SpinningName({ spinning, finalName }: { spinning: boolean; finalName: s
     damping: 20,
     mass: 1,
   });
-  const nameIndex = useTransform(springIndex, (v) => {
+  const transformIndex = useCallback((v: number) => {
     const idx = Math.floor(v) % SAMPLE_NAMES.length;
     return idx < 0 ? idx + SAMPLE_NAMES.length : idx;
-  });
+  }, []);
+  const nameIndex = useTransform(springIndex, transformIndex);
   const [display, setDisplay] = useState(SAMPLE_NAMES[0]);
 
   useEffect(() => {

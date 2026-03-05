@@ -64,7 +64,7 @@ function AnimatedScore({ target }: { target: number }) {
     duration: ANIMATION_DURATION_MS,
     bounce: 0,
   });
-  const rounded = useTransform(spring, (v) => Math.round(v));
+  const rounded = useTransform(spring, Math.round);
   const [display, setDisplay] = useState(0);
 
   useEffect(() => {
