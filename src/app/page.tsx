@@ -31,9 +31,19 @@ export default function Home() {
   const [mode, setMode] = useState("explain");
   const [lens, setLens] = useState<Lens>('porter');
   const lensRef = useRef<Lens>('porter');
+  const modeRef = useRef(mode);
+  modeRef.current = mode;
+  const messagesRef = useRef(messages);
+  messagesRef.current = messages;
   const [answer, setAnswer] = useState("");
   const [chunks, setChunks] = useState<ChunkData[]>([]);
   const [lastQuery, setLastQuery] = useState("");
+  const lastQueryRef = useRef(lastQuery);
+  lastQueryRef.current = lastQuery;
+  const chunksRef = useRef(chunks);
+  chunksRef.current = chunks;
+  const answerRef = useRef(answer);
+  answerRef.current = answer;
   const abortControllerRef = useRef<AbortController | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState("");
@@ -70,6 +80,11 @@ export default function Home() {
     () => [...new Set(chunks.map((c) => c.metadata.subroutine_name).filter(Boolean))],
     [chunks]
   );
+
+  const nameTokens = useMemo(() => {
+    const tokens = lastQuery.match(/\b[a-zA-Z][a-zA-Z0-9]{3,7}\b/gi) ?? [];
+    return new Set(tokens.map((t) => t.toUpperCase()));
+  }, [lastQuery]);
 
   const handlePin = useCallback((chunk: ChunkData) => {
     setPinnedItems((prev) => {
@@ -122,9 +137,9 @@ export default function Home() {
       const controller = new AbortController();
       abortControllerRef.current = controller;
 
-      const activeMode = modeOverride || mode;
+      const activeMode = modeOverride || modeRef.current;
       // Capture messages before any await — state reads after await see stale values
-      const currentMessages = messages;
+      const currentMessages = messagesRef.current;
       setIsLoading(true);
       setAnswer("");
       setChunks([]);
@@ -140,10 +155,6 @@ export default function Home() {
           body: JSON.stringify({ query, mode: activeMode, lens: lensRef.current, history: currentMessages }),
           signal: controller.signal,
         });
-
-        if (!response.ok) {
-          throw new Error("Query failed");
-        }
 
         const reader = response.body?.getReader();
         if (!reader) throw new Error("No reader");
@@ -220,7 +231,7 @@ export default function Home() {
         setIsLoading(false);
       }
     },
-    [mode, messages]
+    []
   );
 
   const handleRoutineClick = useCallback(
@@ -229,15 +240,15 @@ export default function Home() {
       setExampleQuery(q);
       handleSearch(q);
     },
-    [handleSearch]
+    []
   );
 
   const handleModeChange = useCallback((newMode: string) => {
     setMode(newMode);
-    if (lastQuery && (chunks.length > 0 || answer)) {
-      handleSearch(lastQuery, newMode);
+    if (lastQueryRef.current && (chunksRef.current.length > 0 || answerRef.current)) {
+      handleSearch(lastQueryRef.current, newMode);
     }
-  }, [lastQuery, chunks, answer, handleSearch]);
+  }, []);
 
   const filteredChunks = chunks.filter((chunk) => {
     if (categoryFilter && chunk.metadata.category !== categoryFilter) return false;
@@ -253,7 +264,7 @@ export default function Home() {
     }
     setExampleQuery(query);
     handleSearch(query, suggestedMode);
-  }, [handleSearch]);
+  }, []);
 
   return (
     <div className="min-h-screen bg-ll-surface">
@@ -397,6 +408,7 @@ export default function Home() {
                       chunk={chunk}
                       onPin={handlePin}
                       isPinned={pinnedIds.has(chunk.id)}
+                      isDirectMatch={nameTokens.has(chunk.metadata.subroutine_name)}
                       activeRoutine={activeRoutine}
                       onRoutineHover={handleRoutineHover}
                       onRoutineClick={handleRoutineClick}
