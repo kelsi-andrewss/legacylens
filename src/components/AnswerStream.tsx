@@ -105,6 +105,9 @@ const AnswerStream = React.memo(function AnswerStream({
 
   const routineNameSet = useMemo(() => new Set(routineNames), [routineNames]);
 
+  const activeRoutineRef = useRef(activeRoutine);
+  activeRoutineRef.current = activeRoutine;
+
   const onRoutineHoverRef = useRef(onRoutineHover);
   useEffect(() => {
     onRoutineHoverRef.current = onRoutineHover;
@@ -137,7 +140,7 @@ const AnswerStream = React.memo(function AnswerStream({
       }
 
       if (routineNameSet.has(text)) {
-        const isActive = activeRoutine === text;
+        const isActive = activeRoutineRef.current === text;
         return (
           <code
             className={`semantic-tracer-inline${onRoutineClickRef.current ? " cursor-pointer underline decoration-dotted hover:text-ll-primary" : ""}`}
@@ -162,7 +165,7 @@ const AnswerStream = React.memo(function AnswerStream({
             return (
               <AnnotatedText
                 text={child}
-                activeRoutine={activeRoutine}
+                activeRoutine={activeRoutineRef.current}
                 onRoutineHover={onRoutineHoverRef.current}
                 onRoutineClick={onRoutineClickRef.current}
               />
@@ -180,7 +183,7 @@ const AnswerStream = React.memo(function AnswerStream({
             return (
               <AnnotatedText
                 text={child}
-                activeRoutine={activeRoutine}
+                activeRoutine={activeRoutineRef.current}
                 onRoutineHover={onRoutineHoverRef.current}
                 onRoutineClick={onRoutineClickRef.current}
               />
@@ -190,7 +193,7 @@ const AnswerStream = React.memo(function AnswerStream({
         })}
       </li>
     ),
-  }), [routineNameSet, activeRoutine, handleMouseEnter, handleMouseLeave, handleClick]);
+  }), [routineNameSet, handleMouseEnter, handleMouseLeave, handleClick]);
 
   if (!rendered && !isStreaming) return null;
 
