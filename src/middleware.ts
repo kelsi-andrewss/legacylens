@@ -16,7 +16,7 @@ function getIp(request: NextRequest): string {
   if (forwarded) {
     return forwarded.split(",")[0].trim();
   }
-  return request.ip ?? "unknown";
+  return "unknown";
 }
 
 function getRouteConfig(pathname: string): { limit: number; bucket: string } {
