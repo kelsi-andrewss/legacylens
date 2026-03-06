@@ -65,6 +65,9 @@ export default function Home() {
   const handleLensChange = useCallback((newLens: Lens) => {
     setLens(newLens);
     lensRef.current = newLens;
+    if (lastQueryRef.current && (chunksRef.current.length > 0 || answerRef.current)) {
+      handleSearch(lastQueryRef.current);
+    }
   }, []);
 
   const handleRoutineHover = useCallback((name: string | null) => {
