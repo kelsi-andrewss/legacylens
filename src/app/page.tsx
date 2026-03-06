@@ -16,6 +16,19 @@ import { Library, X } from "lucide-react";
 
 const SCRATCHPAD_KEY = "ll-scratchpad";
 
+const MODE_LABELS: Record<string, string> = {
+  explain: "Explain",
+  dependencies: "Dependencies",
+  docs: "Generate Docs",
+  translate: "Translate",
+};
+
+const LENS_LABELS: Record<string, string> = {
+  porter: "Porter",
+  debugger: "Debugger",
+  learner: "Learner",
+};
+
 function loadPinnedItems(): PinnedItem[] {
   if (typeof window === "undefined") return [];
   try {
@@ -393,6 +406,11 @@ export default function Home() {
             <ModeSelector mode={mode} onModeChange={handleModeChange} lens={lens} onLensChange={handleLensChange} />
 
             {(answer || isLoading) && (
+              <>
+              <div className="flex items-center gap-2 text-xs text-ll-on-surface-muted">
+                <span className="bg-ll-surface-tonal rounded-full px-2 py-0.5">{MODE_LABELS[mode] ?? mode}</span>
+                <span className="bg-ll-surface-tonal rounded-full px-2 py-0.5">{LENS_LABELS[lens] ?? lens} lens</span>
+              </div>
               <AnswerStream
                 content={answer}
                 isStreaming={isLoading}
@@ -401,6 +419,7 @@ export default function Home() {
                 onRoutineHover={handleRoutineHover}
                 onRoutineClick={handleRoutineClick}
               />
+              </>
             )}
 
             {chunks.length > 0 && (
